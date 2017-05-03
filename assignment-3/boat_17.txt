@@ -1,0 +1,13 @@
+{ "_id" : { "$oid" : "54f929fe7b2b4c977e827d9c" }, "marina" : "Sea View", "name" : "Flying Dutch", "number" : 313, "color" : "blue", "driven_by" : [ "sail" ] }
+{ "_id" : { "$oid" : "54f92a037b2b4c977e827d9d" }, "marina" : "Sea View", "name" : "Blue Shark", "number" : 515, "color" : "black", "driven_by" : [ "motor" ] }
+{ "_id" : { "$oid" : "54f92a0b7b2b4c977e827d9e" }, "marina" : "Sea View", "name" : "Killer Whale", "number" : 111, "color" : "back", "driven_by" : [ "row" ] }
+{ "_id" : { "$oid" : "54f92a107b2b4c977e827d9f" }, "marina" : "Sea View", "name" : "Dolphin", "number" : 110, "color" : "blue", "driven_by" : [ "sail, motor" ] }
+{ "_id" : { "$oid" : "54f92a177b2b4c977e827da0" }, "marina" : "Port Nicholson", "name" : "Red Cod", "number" : 616, "color" : "yellow", "driven_by" : [ "sail, motor" ] }
+{ "_id" : { "$oid" : "54f92a1e7b2b4c977e827da1" }, "marina" : "Port Nicholson", "name" : "Tarakihi", "number" : 717, "color" : "red", "driven_by" : [ "row", "motor" ] }
+{ "_id" : { "$oid" : "54f92a237b2b4c977e827da2" }, "marina" : "Port Nicholson", "name" : "Night Breeze", "number" : 818, "color" : "black", "driven_by" : [ "row" ] }
+{ "_id" : { "$oid" : "54f92a2a7b2b4c977e827da3" }, "marina" : "Port Nicholson", "name" : "Mermaid", "number" : 919, "color" : "white", "driven_by" : [ "sail", "motor" ] }
+{ "_id" : { "$oid" : "54f92a2f7b2b4c977e827da4" }, "marina" : "Port Nicholson", "name" : "Dolphin", "number" : 110, "color" : "white" }
+{ "_id" : { "$oid" : "54f92a357b2b4c977e827da5" }, "marina" : "Port Nicholson", "name" : "Pretty Lady", "number" : 515, "color" : "pink", "driven_by" : [ "sail" ] }
+{ "_id" : { "$oid" : "54f92a3c7b2b4c977e827da6" }, "marina" : "Evans Bay", "name" : "Sally Ann", "number" : 313, "color" : "white", "driven_by" : [ "motor" ] }
+{ "_id" : { "$oid" : "54f92a457b2b4c977e827da7" }, "marina" : "Evans Bay", "name" : "Charlie", "number" : 515, "color" : "blue", "driven_by" : [ "sail", "motor" ] }
+{ "_id" : { "$oid" : "54fa7d642365c7e4bae69d0a" }, "marina" : "Upper Hutt", "name" : "Penquin", "number" : 131, "color" : "yellow", "driven_by" : [ "sail", "motor" ] }

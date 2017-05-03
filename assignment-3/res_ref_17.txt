@@ -1,0 +1,15 @@
+{ "_id" : { "$oid" : "54f92d567b2b4c977e827dae" }, "marina" : "Sea View", "reserves" : { "boat" : 313, "sailor" : 707, "date" : "2017-03-15" } }
+{ "_id" : { "$oid" : "54f92d5c7b2b4c977e827daf" }, "marina" : "Sea View", "reserves" : { "boat" : 313, "sailor" : 111, "date" : "2017-03-16" } }
+{ "_id" : { "$oid" : "54f92d627b2b4c977e827db0" }, "marina" : "Sea View", "reserves" : { "boat" : 111, "sailor" : 111, "date" : "2017-03-15" } }
+{ "_id" : { "$oid" : "54f92d6c7b2b4c977e827db1" }, "marina" : "Sea View", "reserves" : { "boat" : 110, "sailor" : 818, "date" : "2017-03-15" } }
+{ "_id" : { "$oid" : "54f92d707b2b4c977e827db2" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 919, "sailor" : 818, "date" : "2017-03-16" } }
+{ "_id" : { "$oid" : "54f92d757b2b4c977e827db3" }, "marina" : "Sea View", "reserves" : { "boat" : 515, "sailor" : 919, "date" : "2017-03-15" } }
+{ "_id" : { "$oid" : "54f92d7a7b2b4c977e827db4" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 919, "sailor" : 707, "date" : "2017-03-17" } }
+{ "_id" : { "$oid" : "54f92d7e7b2b4c977e827db5" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 616, "sailor" : 707, "date" : "2017-03-21" } }
+{ "_id" : { "$oid" : "54f92d837b2b4c977e827db6" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 515, "sailor" : 111, "date" : "2017-03-17" } }
+{ "_id" : { "$oid" : "54f92d927b2b4c977e827db7" }, "marina" : "Evans Bay", "reserves" : { "boat" : 313, "sailor" : 818, "date" : "2017-03-19" } }
+{ "_id" : { "$oid" : "54f92d977b2b4c977e827db8" }, "marina" : "Evans Bay", "reserves" : { "boat" : 515, "sailor" : 818, "date" : "2017-03-21" } }
+{ "_id" : { "$oid" : "54f92d9e7b2b4c977e827db9" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 818, "sailor" : 999, "date" : "2017-03-20" } }
+{ "_id" : { "$oid" : "54f92da37b2b4c977e827dba" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 818, "sailor" : 999, "date" : "2017-03-21" } }
+{ "_id" : { "$oid" : "54f92daa7b2b4c977e827dbb" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 717, "sailor" : 919, "date" : "2017-03-25" } }
+{ "_id" : { "$oid" : "57161df5b6169855c3bd18ce" }, "marina" : "Port Nicholson", "reserves" : { "boat" : 818, "sailor" : 777, "date" : "2017-03-28" } }

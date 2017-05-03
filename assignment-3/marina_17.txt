@@ -1,0 +1,3 @@
+{ "_id" : { "$oid" : "54f923b87b2b4c977e827d8d" }, "name" : "Sea View", "location" : "Petone" }
+{ "_id" : { "$oid" : "54f923dd7b2b4c977e827d8e" }, "name" : "Port Nicholson", "location" : "Wellington" }
+{ "_id" : { "$oid" : "54f924007b2b4c977e827d8f" }, "name" : "Evans Bay", "location" : "Wellington" }

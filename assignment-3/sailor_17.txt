@@ -1,0 +1,8 @@
+{ "_id" : { "$oid" : "54f92b017b2b4c977e827da8" }, "name" : "James", "sailorId" : 707, "skills" : [ "row", "sail", "motor", "fish" ], "address" : "Wellington" }
+{ "_id" : { "$oid" : "54f92b2c7b2b4c977e827da9" }, "name" : "Peter", "sailorId" : 111, "skills" : [ "row", "sail", "motor" ], "address" : "Upper Hutt" }
+{ "_id" : { "$oid" : "54f92bdd7b2b4c977e827daa" }, "name" : "Milan", "sailorId" : 818, "skills" : [ "row", "sail", "motor", "first aid" ], "address" : "Wellington" }
+{ "_id" : { "$oid" : "54f92bff7b2b4c977e827dab" }, "name" : "Eileen", "sailorId" : 919, "skills" : [ "sail", "motor", "swim" ], "address" : "Lower Hutt" }
+{ "_id" : { "$oid" : "54f92cac7b2b4c977e827dac" }, "name" : "Paul", "sailorId" : 110, "skills" : [ "row", "swim" ], "address" : "Upper Hutt" }
+{ "_id" : { "$oid" : "54f92cdf7b2b4c977e827dad" }, "name" : "Charmain", "sailorId" : 999, "skills" : [ "row" ], "address" : "Upper Hutt" }
+
+{ "_id" : { "$oid" : "57161fb9b6169855c3bd18cf" }, "name" : "Gwendolynn", "sailorId" : 777, "skills" : [ "row", "sail", "motor", "dance" ], "address" : "Masterton" }
