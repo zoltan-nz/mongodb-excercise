@@ -6,7 +6,7 @@ Original repository and progress history: https://github.com/zoltan-nz/mongodb-e
 
 ## Part I
 
-### Question 1 -  Making your reserves Collection 
+### Question 1 - Making your reserves Collection 
 (32 marks)
 
 To spare you from doing a tedious and repetitive job, Pavle made his reserves MongoDB collection and exported it into the file: `reserves_17.txt`.
@@ -140,27 +140,27 @@ iii. Check whether your indexes perform as expected. In your answer, show how di
 
 
 ```js
->var sailor1 = { name: "Charmain", sailorId: 999, skills: [ "row" ], 
+> var sailor1 = { name: "Charmain", sailorId: 999, skills: [ "row" ], 
     address: "Upper Hutt" }
->var sailor2 = { name: "Paul", sailorId: 110, skills: [ "row", "swim" ], 
+> var sailor2 = { name: "Paul", sailorId: 110, skills: [ "row", "swim" ], 
     address: "Upper Hutt"}
 
->var marina1 = {name: "Evans Bay", location: "Wellington" }
->var marina2 = {name: "Port Nicholson", location: "Wellington"}
+> var marina1 = {name: "Evans Bay", location: "Wellington" }
+> var marina2 = {name: "Port Nicholson", location: "Wellington"}
 
->var boat1 = {name: "Night Breeze", number: 818, color: "black", 
+> var boat1 = {name: "Night Breeze", number: 818, color: "black", 
     driven_by: [ "row" ]}
->var boat2 = {name: "Killer Whale", number: 111, color: "black", 
+> var boat2 = {name: "Killer Whale", number: 111, color: "black", 
     driven_by: [ "row" ]}
 
->var date1 = "2017-03-22"
->var date2 = "2017-03-23"
+> var date1 = "2017-03-22"
+> var date2 = "2017-03-23"
 
->db.reserves.insert({marina: marina1, reserves: { boat: boat1, sailor: sailor1, 
+> db.reserves.insert({marina: marina1, reserves: { boat: boat1, sailor: sailor1, 
     date: date1}})
 WriteResult({ "nInserted" : 1 })
 
->db.reserves.insert({marina: marina2, reserves: { boat: boat2, sailor: sailor1, 
+> db.reserves.insert({marina: marina2, reserves: { boat: boat2, sailor: sailor1, 
     date: date1}})
 WriteResult({
 	"nInserted" : 0,
@@ -173,7 +173,7 @@ WriteResult({
 	}
 })
 
->db.reserves.insert({marina: marina1, reserves: { boat: boat1, sailor: sailor2, 
+> db.reserves.insert({marina: marina1, reserves: { boat: boat1, sailor: sailor2, 
     date: date1}})
 WriteResult({
 	"nInserted" : 0,
@@ -184,15 +184,15 @@ WriteResult({
 		  "key: { : { name: \"Night Breeze\", number: 818.0, color: \"black\", " +
 		   "driven_by: [ \"row\" ] }, : \"2017-03-22\" }"
 
->db.reserves.insert({marina: marina1, reserves: { boat: boat1, sailor: sailor1, 
+> db.reserves.insert({marina: marina1, reserves: { boat: boat1, sailor: sailor1, 
     date: date2}})
 WriteResult({ "nInserted" : 1 })
 
->db.reserves.insert({marina: marina2, reserves: { boat: boat2, sailor: sailor2, 
+> db.reserves.insert({marina: marina2, reserves: { boat: boat2, sailor: sailor2, 
     date: date2}})
 WriteResult({ "nInserted" : 1 })
 
->db.reserves.insert({marina: marina2, reserves: { boat: boat2, sailor: sailor1, 
+> db.reserves.insert({marina: marina2, reserves: { boat: boat2, sailor: sailor1, 
     date: date2}})
 WriteResult({
 	"nInserted" : 0,
@@ -204,7 +204,8 @@ WriteResult({
 		   "[ \"row\" ], address: \"Upper Hutt\" }, : \"2017-03-23\" }"
 	}
 })
-
+```
+```js
 > db.reserves.getIndexes()
 [
 	{
@@ -237,3 +238,89 @@ WriteResult({
 	}
 ]
 ```
+
+### Question 2 - Simple Queries 
+
+(26 marks)
+
+a) (2mark) Find the number of all documents in your `reserves` collection.
+
+```js
+> use ass3
+switched to db ass3
+> db.reserves.find().length()
+20
+```
+
+b) (4 marks) Find the number of all documents in your `reserves` collection containing reserves made in `Port Nicholson` marina.
+
+```js
+> db.reserves.find({ "marina.name": "Port Nicholson" }).length()
+10
+```
+
+c) (4 mark) Find unique sailor names.
+
+```js
+> db.reserves.distinct( "reserves.sailor.name" )
+  [
+  	"James",
+  	"Peter",
+  	"Milan",
+  	"Eileen",
+  	"Charmain",
+  	"Gwendolynn",
+  	"Paul"
+  ]
+```
+
+d) (5 marks) Find marina names, boat names, and sailor names having a reservation on `2017-03-16`.
+
+```js
+> db.reserves.find({ "reserves.date": "2017-03-16" }, { _id: 0,  "marina.name": 
+    1, "reserves.boat.name": 1, "reserves.sailor.name": 1})
+  
+  { "marina" : { "name" : "Sea View" }, "reserves" : { "boat" : { "name" : 
+    "Flying Dutch" }, "sailor" : { "name" : "Peter" } } }
+  { "marina" : { "name" : "Port Nicholson" }, "reserves" : { "boat" : { "name" : 
+    "Mermaid" }, "sailor" : { "name" : "Milan" } } }
+```
+e) (5 marks) Find sailors having `swim` skill. Display just sailor names.
+
+```js
+> db.reserves.distinct( "reserves.sailor.name", { "reserves.sailor.skills": 
+    "swim" } )
+  
+  [ "Eileen", "Paul" ]
+```
+
+f) (6 marks) Find sailors having exactly `row`, `sail`, and `motor` skills (no more and no less, but in an arbitrary order). Display just sailor names.
+
+```js
+> db.reserves.distinct("reserves.sailor.name", { "reserves.sailor.skills": 
+    { $size: 3, $all: ["motor", "row", "sail"] } })
+
+[ "Peter" ]
+
+> db.reserves.distinct("reserves.sailor.name", { "reserves.sailor.skills": 
+    { $size: 3, $all: ["row", "sail", "motor"] } })
+
+[ "Peter" ]
+```
+
+### Question 3 - Time Table Collection
+
+(10 marks)
+
+Assume Wellington Tranz Metro has acquired an iPhone application that works as a data recorder for railway vehicles (`cars`, `engines`). The application uses mobile data connections to send information to servers in real time. The information includes measurements such as the `location` and `speed` of the `vehicle`. They have selected MongoDB (instead of Cassandra, as in Assignment 1) as the CDBMS to use for this project. They invited you, as a respected database specialist to design an embedded collection of the database.
+
+a) (6 marks) Assume your document will contain the following entity types: 
+
+* `driver`,
+* `vehicle`,
+* `timeTable`, and
+* `dataPoint`.
+
+Design a MongoDB document by representing relationships between entity types by **embedding**. Make relationships between entity types clearly visible in your design. Use iPhone database sample data of Assignment 1 to populate your document. Show your design in your answer.
+
+b) (4 marks) How many instances of each entity type may contain your document maximally (make a best guess if you can’t give an exact number)?
