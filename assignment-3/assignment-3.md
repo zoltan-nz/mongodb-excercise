@@ -323,4 +323,109 @@ a) (6 marks) Assume your document will contain the following entity types:
 
 Design a MongoDB document by representing relationships between entity types by **embedding**. Make relationships between entity types clearly visible in your design. Use iPhone database sample data of Assignment 1 to populate your document. Show your design in your answer.
 
+We are collection data point sequences from iPhone application. Each data point sequence will be inserted in our collection. Our collection will be called `datapoints` and we insert it with `db.datapoints.insert(sequence1)`. Each inserted document contains details about connected entities: `driver` (with `name`, `currentPosition`, `mobile`, etc.), `vehicle` (with `vehicleId`, `status`, etc.), `timeTable` ( with `lineName`, `services` array, in a `service` we have an embeded doc which contains details about a `station`), `date` and the actual `dataPoint`.
+
+Because we embed more level of data, much cleaner if we use variables to manage our sample data. The sample is for demo only and not fully represent a real situation, however it shows the design of the collection.
+
+```js
+> var stationWellington = {
+  name: 'Wellington', longitude: 174.7762, latitude: -41.2865
+};
+
+> var stationPetone = {
+  name: 'Petone', longitude: 174.8851, latitude: -41.227
+};
+
+> var service1 = {
+  serviceNo: 1, timeTable: [
+    {station: stationWellington, time: 0605, distance: 0},
+    {station: stationPetone, time: 0617, distance: 8.3}
+  ]
+};
+
+> var service11 = {
+  serviceNo: 11, timeTable: [
+    {station: stationWellington, time: 1935, distance: 0},
+    {station: stationPetone, time: 1947, distance: 8.3}
+  ]
+};
+
+> var huttValeyLineTimeTable =
+  {
+    lineName: 'Hutt Valey Line (north bound)',
+    services: [service1, service11]
+  };
+
+> var driver1 = {
+  name: 'milan', currentPosition: 'Upper Hutt', mobile: '211111', password: 'mm77', skills: ['Matangi']
+};
+
+> var vehicle1 = {
+  vehicleId: 'FA1122', status: 'Upper Hutt', type: 'Matangi'
+};
+
+> var firstDataPoint =
+  {sequence: '0610', position: {latitude: 174.77, longitude: -41.2262}, speed: 29.1};
+
+> var secondDataPoint =
+  {sequence: '0615', position: {latitude: 175, longitude: -41.2012}, speed: 70.1};
+
+> var sequence1 = {
+  driver: driver1,
+  vehicle: vehicle1,
+  timeTable: huttValeyLineTimeTable,
+  date: '2017-03-25',
+  dataPoint: firstDataPoint
+};
+
+> var sequence2 = {
+  driver: driver1,
+  vehicle: vehicle1,
+  timeTable: huttValeyLineTimeTable,
+  date: '2017-03-25',
+  dataPoint: secondDataPoint
+};
+
+> db.datapoints.insert(sequence1);
+WriteResult({ "nInserted" : 1 })
+> db.datapoints.insert(sequence2);
+WriteResult({ "nInserted" : 1 })
+
+> db.datapoints.find();
+{ "_id" : ObjectId("5916a9c9e2029d7a9245d7a3"), "driver" : { "name" : "milan", "currentPosition" : "Upper Hutt", 
+"mobile" : "211111", "password" : "mm77", "skills" : [ "Matangi" ] }, "vehicle" : { "vehicleId" : "FA1122", "status" : 
+"Upper Hutt", "type" : "Matangi" }, "timeTable" : { "lineName" : "Hutt Valey Line (north bound)", "services" : 
+[ { "serviceNo" : 1, "timeTable" : [ { "station" : { "name" : "Wellington", "longitude" : 174.7762, "latitude" : 
+-41.2865 }, "time" : 389, "distance" : 0 }, { "station" : { "name" : "Petone", "longitude" : 174.8851, "latitude" : 
+-41.227 }, "time" : 399, "distance" : 8.3 } ] }, { "serviceNo" : 11, "timeTable" : [ { "station" : { "name" : 
+"Wellington", "longitude" : 174.7762, "latitude" : -41.2865 }, "time" : 1935, "distance" : 0 }, { "station" : 
+{ "name" : "Petone", "longitude" : 174.8851, "latitude" : -41.227 }, "time" : 1947, "distance" : 8.3 } ] } ] }, 
+"date" : "2017-03-25", "dataPoint" : { "sequence" : "0610", "position" : { "latitude" : 174.77, "longitude" : 
+-41.2262 }, "speed" : 29.1 } }
+
+{ "_id" : ObjectId("5916a9cbe2029d7a9245d7a4"), "driver" : { "name" : "milan", "currentPosition" : "Upper Hutt", 
+"mobile" : "211111", "password" : "mm77", "skills" : [ "Matangi" ] }, "vehicle" : { "vehicleId" : "FA1122", "status" : 
+"Upper Hutt", "type" : "Matangi" }, "timeTable" : { "lineName" : "Hutt Valey Line (north bound)", "services" : 
+[ { "serviceNo" : 1, "timeTable" : [ { "station" : { "name" : "Wellington", "longitude" : 174.7762, "latitude" : 
+-41.2865 }, "time" : 389, "distance" : 0 }, { "station" : { "name" : "Petone", "longitude" : 174.8851, "latitude" : 
+-41.227 }, "time" : 399, "distance" : 8.3 } ] }, { "serviceNo" : 11, "timeTable" : [ { "station" : { "name" : 
+"Wellington", "longitude" : 174.7762, "latitude" : -41.2865 }, "time" : 1935, "distance" : 0 }, { "station" : 
+{ "name" : "Petone", "longitude" : 174.8851, "latitude" : -41.227 }, "time" : 1947, "distance" : 8.3 } ] } ] }, 
+"date" : "2017-03-25", "dataPoint" : { "sequence" : "0615", "position" : { "latitude" : 175, "longitude" : -41.2012 }, 
+"speed" : 70.1 } }
+```
+
 b) (4 marks) How many instances of each entity type may contain your document maximally (make a best guess if you can’t give an exact number)?
+
+One document contains: `driver`, `vehicle`, `timeTable`, `service`, `station`, `dataPoint`
+It is maximum 6 type of entity.
+
+Using our sample database, one inserted document will contain maximum the following number of instances: 
+
+* `driver`: 1,
+* `vehicle`: 1,
+* `timeTable`: 1,
+* `service`: 2 (in Assignment 1, all time table have maximum 2 active services),
+* `station`: 8 (in Assignment 1, we have data about 8 stations, and the longest timeTable has 8 stops),
+* `dataPoint`: not limited, because we collect this continuously.
+
