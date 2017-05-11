@@ -429,3 +429,96 @@ Using our sample database, one inserted document will contain maximum the follow
 * `station`: 8 (in Assignment 1, we have data about 8 stations, and the longest timeTable has 8 stops),
 * `dataPoint`: not limited, because we collect this continuously.
 
+## Part II
+
+Pavle implemented the referencing version of the `Boat Hire` database as four collections and exported them into files:
+
+* `marina_17.txt`,
+* `sailor_17.txt`,
+* `boat_17.txt`,
+* `res_ref_17.tx`t.
+
+You will find these files at the course Assignments page. Start a single sharded MongoDB deployment and import the files. You may do import into the same database as for `reserves` collection. Call the new collections: `marina`, `sailor`, `boat`, and `res_ref`. So far, Pavle did not find any errors in the implementation. Use these collections to answer the following questions.
+
+----
+Importing collections:
+
+```
+$ mongoimport --db ass3 --collection marina  --file ./marina_17.txt
+coonnected to: 127.0.0.1
+imported 3 objects
+$ mongoimport --db ass3 --collection sailor --file ./sailor_17.txt
+imported 7 objects
+$ mongoimport --db ass3 --collection boat --file ./boat_17.txt
+check 9 13
+imported 13 object
+$ mongoimport --db ass3 --collection res_ref --file ./res_ref_17.txt
+check 9 15
+imported 15 objects
+```
+
+```
+$ mongo
+> use ass3
+switched to db ass3
+> show collections
+  boat
+  datapoints
+  marina
+  res_ref
+  reserves
+  sailor
+  system.indexes 
+```
+----
+
+### Question 4. - Simple Queries 
+(8 marks)
+
+a) (4 marks) Find all unique sailors.
+
+Let's suppose we have a constrain index in our `sailor` database which refuse duplication, so in this case a simple `find` can list all the unique sailor.
+
+```
+> use ass3
+> db.sailor.find()
+```
+
+We can use `distinct` to get unique values, for example unique `names`:
+
+```
+> db.sailor.distinct('name')
+[
+	"James",
+	"Peter",
+	"Milan",
+	"Eileen",
+	"Paul",
+	"Charmain",
+	"Gwendolynn"
+]
+```
+
+Of course we could have two sailors with the same name, but they must have different `sailorId`. Let's say, there was a mistake, and there was not implemented an index constrain, so the same data (with the same `sailorId`) was inserted in our collection. In this case we can use aggregation and groups. The following query will show only the first instance if there is two records with the same data (`sailorId`, `name`, `skills`, `address`)
+
+```
+>  db.sailor.aggregate({$group: { '_id': '$sailorId', sailor: { $first: { 'name': '$name', 'skills': '$skills', 
+    'address': '$address' } } }})
+{ "_id" : 777, "sailor" : { "name" : "Gwendolynn", "skills" : [ "row", "sail", "motor", "dance" ], "address" : 
+    "Masterton" } }
+{ "_id" : 110, "sailor" : { "name" : "Paul", "skills" : [ "row", "swim" ], "address" : "Upper Hutt" } }
+{ "_id" : 919, "sailor" : { "name" : "Eileen", "skills" : [ "sail", "motor", "swim" ], "address" : "Lower Hutt" } }
+{ "_id" : 111, "sailor" : { "name" : "Peter", "skills" : [ "row", "sail", "motor" ], "address" : "Upper Hutt" } }
+{ "_id" : 999, "sailor" : { "name" : "Charmain", "skills" : [ "row" ], "address" : "Upper Hutt" } }
+{ "_id" : 818, "sailor" : { "name" : "Milan", "skills" : [ "row", "sail", "motor", "first aid" ], "address" : 
+    "Wellington" } }
+{ "_id" : 707, "sailor" : { "name" : "James", "skills" : [ "row", "sail", "motor", "fish" ], "address" : 
+    "Wellington" } }
+```
+
+b) (4 marks) Find sailors having exactly `row`, `sail`, and `motor` skills (no more and no less). Display just sailor names.
+
+```js
+> db.sailor.distinct("sailor.name", { "sailor.skills": { $size: 3, $all: ["motor", "row", "sail"] } })
+[ "Peter" ]
+```
