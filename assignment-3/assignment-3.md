@@ -65,7 +65,7 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 From MongoDB v3.2
 
 ```js
-> db.collection.findOneAndUpdate({_id: '54f102de0b54b61a031776ed'}, 
+> db.reserves.findOneAndUpdate({_id: '54f102de0b54b61a031776ed'}, 
 { $rename: { 'reserves.boat.numbver': 'reserves.boat.number' } })
 ```
 
@@ -243,7 +243,11 @@ WriteResult({
 
 (26 marks)
 
+Find all script together in `q2.js`.
+
 a) (2mark) Find the number of all documents in your `reserves` collection.
+
+using `length()`
 
 ```js
 > use ass3
@@ -252,12 +256,30 @@ switched to db ass3
 20
 ```
 
+using `count()`
+
+```js
+> db.reserves.find().count()
+20
+```
+
 b) (4 marks) Find the number of all documents in your `reserves` collection containing reserves made in `Port Nicholson` marina.
+
+using `length()`
 
 ```js
 > db.reserves.find({ "marina.name": "Port Nicholson" }).length()
 10
 ```
+
+using `count()`
+
+```js
+> db.reserves.find({ "marina.name": "Port Nicholson" }).count()
+10
+```
+
+
 
 c) (4 mark) Find unique sailor names.
 
@@ -328,41 +350,42 @@ We are collection data point sequences from iPhone application. Each data point 
 Because we embed more level of data, much cleaner if we use variables to manage our sample data. The sample is for demo only and not fully represent a real situation, however it shows the design of the collection.
 
 ```js
+// This script can be run with load('q3.js')
 > var stationWellington = {
   name: 'Wellington', longitude: 174.7762, latitude: -41.2865
-};
+}
 
 > var stationPetone = {
   name: 'Petone', longitude: 174.8851, latitude: -41.227
-};
+}
 
 > var service1 = {
   serviceNo: 1, timeTable: [
-    {station: stationWellington, time: 0605, distance: 0},
-    {station: stationPetone, time: 0617, distance: 8.3}
+    {station: stationWellington, time: '0605', distance: 0},
+    {station: stationPetone, time: '0617', distance: 8.3}
   ]
-};
+}
 
 > var service11 = {
   serviceNo: 11, timeTable: [
-    {station: stationWellington, time: 1935, distance: 0},
-    {station: stationPetone, time: 1947, distance: 8.3}
+    {station: stationWellington, time: '1935', distance: 0},
+    {station: stationPetone, time: '1947', distance: 8.3}
   ]
-};
+}
 
 > var huttValeyLineTimeTable =
   {
     lineName: 'Hutt Valey Line (north bound)',
     services: [service1, service11]
-  };
+  }
 
 > var driver1 = {
   name: 'milan', currentPosition: 'Upper Hutt', mobile: '211111', password: 'mm77', skills: ['Matangi']
-};
+}
 
 > var vehicle1 = {
   vehicleId: 'FA1122', status: 'Upper Hutt', type: 'Matangi'
-};
+}
 
 > var firstDataPoint =
   {sequence: '0610', position: {latitude: 174.77, longitude: -41.2262}, speed: 29.1};
@@ -376,7 +399,7 @@ Because we embed more level of data, much cleaner if we use variables to manage 
   timeTable: huttValeyLineTimeTable,
   date: '2017-03-25',
   dataPoint: firstDataPoint
-};
+}
 
 > var sequence2 = {
   driver: driver1,
@@ -384,7 +407,7 @@ Because we embed more level of data, much cleaner if we use variables to manage 
   timeTable: huttValeyLineTimeTable,
   date: '2017-03-25',
   dataPoint: secondDataPoint
-};
+}
 
 > db.datapoints.insert(sequence1);
 WriteResult({ "nInserted" : 1 })
@@ -396,10 +419,10 @@ WriteResult({ "nInserted" : 1 })
 "mobile" : "211111", "password" : "mm77", "skills" : [ "Matangi" ] }, "vehicle" : { "vehicleId" : "FA1122", "status" : 
 "Upper Hutt", "type" : "Matangi" }, "timeTable" : { "lineName" : "Hutt Valey Line (north bound)", "services" : 
 [ { "serviceNo" : 1, "timeTable" : [ { "station" : { "name" : "Wellington", "longitude" : 174.7762, "latitude" : 
--41.2865 }, "time" : 389, "distance" : 0 }, { "station" : { "name" : "Petone", "longitude" : 174.8851, "latitude" : 
--41.227 }, "time" : 399, "distance" : 8.3 } ] }, { "serviceNo" : 11, "timeTable" : [ { "station" : { "name" : 
-"Wellington", "longitude" : 174.7762, "latitude" : -41.2865 }, "time" : 1935, "distance" : 0 }, { "station" : 
-{ "name" : "Petone", "longitude" : 174.8851, "latitude" : -41.227 }, "time" : 1947, "distance" : 8.3 } ] } ] }, 
+-41.2865 }, "time" : "0605", "distance" : 0 }, { "station" : { "name" : "Petone", "longitude" : 174.8851, "latitude" : 
+-41.227 }, "time" : "0617", "distance" : 8.3 } ] }, { "serviceNo" : 11, "timeTable" : [ { "station" : { "name" : 
+"Wellington", "longitude" : 174.7762, "latitude" : -41.2865 }, "time" : "1935", "distance" : 0 }, { "station" : 
+{ "name" : "Petone", "longitude" : 174.8851, "latitude" : -41.227 }, "time" : "1947", "distance" : 8.3 } ] } ] }, 
 "date" : "2017-03-25", "dataPoint" : { "sequence" : "0610", "position" : { "latitude" : 174.77, "longitude" : 
 -41.2262 }, "speed" : 29.1 } }
 
@@ -407,10 +430,10 @@ WriteResult({ "nInserted" : 1 })
 "mobile" : "211111", "password" : "mm77", "skills" : [ "Matangi" ] }, "vehicle" : { "vehicleId" : "FA1122", "status" : 
 "Upper Hutt", "type" : "Matangi" }, "timeTable" : { "lineName" : "Hutt Valey Line (north bound)", "services" : 
 [ { "serviceNo" : 1, "timeTable" : [ { "station" : { "name" : "Wellington", "longitude" : 174.7762, "latitude" : 
--41.2865 }, "time" : 389, "distance" : 0 }, { "station" : { "name" : "Petone", "longitude" : 174.8851, "latitude" : 
--41.227 }, "time" : 399, "distance" : 8.3 } ] }, { "serviceNo" : 11, "timeTable" : [ { "station" : { "name" : 
-"Wellington", "longitude" : 174.7762, "latitude" : -41.2865 }, "time" : 1935, "distance" : 0 }, { "station" : 
-{ "name" : "Petone", "longitude" : 174.8851, "latitude" : -41.227 }, "time" : 1947, "distance" : 8.3 } ] } ] }, 
+-41.2865 }, "time" : "0605", "distance" : 0 }, { "station" : { "name" : "Petone", "longitude" : 174.8851, "latitude" : 
+-41.227 }, "time" : "0617", "distance" : 8.3 } ] }, { "serviceNo" : 11, "timeTable" : [ { "station" : { "name" : 
+"Wellington", "longitude" : 174.7762, "latitude" : -41.2865 }, "time" : "1935", "distance" : 0 }, { "station" : 
+{ "name" : "Petone", "longitude" : 174.8851, "latitude" : -41.227 }, "time" : "1947", "distance" : 8.3 } ] } ] }, 
 "date" : "2017-03-25", "dataPoint" : { "sequence" : "0615", "position" : { "latitude" : 175, "longitude" : -41.2012 }, 
 "speed" : 70.1 } }
 ```
@@ -443,7 +466,7 @@ You will find these files at the course Assignments page. Start a single sharded
 ----
 Importing collections:
 
-```
+```shell
 $ mongoimport --db ass3 --collection marina  --file ./marina_17.txt
 coonnected to: 127.0.0.1
 imported 3 objects
@@ -457,7 +480,7 @@ check 9 15
 imported 15 objects
 ```
 
-```
+```shell
 $ mongo
 > use ass3
 switched to db ass3
@@ -475,18 +498,20 @@ switched to db ass3
 ### Question 4. - Simple Queries 
 (8 marks)
 
+Find all script together in `q4.js`.
+
 a) (4 marks) Find all unique sailors.
 
 Let's suppose we have a constrain index in our `sailor` database which refuse duplication, so in this case a simple `find` can list all the unique sailor.
 
-```
+```js
 > use ass3
 > db.sailor.find()
 ```
 
 We can use `distinct` to get unique values, for example unique `names`:
 
-```
+```js
 > db.sailor.distinct('name')
 [
 	"James",
@@ -501,7 +526,7 @@ We can use `distinct` to get unique values, for example unique `names`:
 
 Of course we could have two sailors with the same name, but they must have different `sailorId`. Let's say, there was a mistake, and there was not implemented an index constrain, so the same data (with the same `sailorId`) was inserted in our collection. In this case we can use aggregation and groups. The following query will show only the first instance if there is two records with the same data (`sailorId`, `name`, `skills`, `address`)
 
-```
+```js
 >  db.sailor.aggregate({$group: { '_id': '$sailorId', sailor: { $first: { 'name': '$name', 'skills': '$skills', 
     'address': '$address' } } }})
 { "_id" : 777, "sailor" : { "name" : "Gwendolynn", "skills" : [ "row", "sail", "motor", "dance" ], "address" : 
@@ -519,6 +544,91 @@ Of course we could have two sailors with the same name, but they must have diffe
 b) (4 marks) Find sailors having exactly `row`, `sail`, and `motor` skills (no more and no less). Display just sailor names.
 
 ```js
-> db.sailor.distinct("sailor.name", { "sailor.skills": { $size: 3, $all: ["motor", "row", "sail"] } })
+> db.sailor.distinct("name", { "skills": { $size: 3, $all: ["motor", "row", "sail"] } })
 [ "Peter" ]
+```
+
+### Question 5 - Complex Queries 
+(24 marks)
+
+a) (8 marks) Find `marina names`, `boat names`, and `sailor names` having a reservation on “`2017-03-16`”.
+
+
+```js
+// Find this script in `q5a.js` and run in mongo shell with load('q5a.js')
+
+// Don't forget to switch to the relevant database in mongo shell, for example: `use ass3`
+
+var dateFilter = '2017-03-16';
+
+var reservationsCursor = db.res_ref.find(
+  { 'reserves.date': dateFilter },
+  { '_id': 0, marina: 1, 'reserves.boat': 1, 'reserves.sailor': 1 }
+);
+
+var reservations = reservationsCursor.map(function(reservation) {
+  var marinaName = reservation.marina;
+  var boatNumber = reservation.reserves.boat;
+  var sailorId = reservation.reserves.sailor;
+
+  // There are boats with the same number but in different marina, for this reason our filter is more 
+  // accurate if we specify the marina name also.
+  var boat = db.boat.findOne({ marina: marinaName, number: boatNumber }, { '_id': 0, name: 1 });
+  // With this guard, our script safe if there isn't any boat object. Try it out with dropping boat collection.
+  var boatName = boat ? boat.name : '';
+
+  var sailor = db.sailor.findOne({ sailorId: sailorId }, { '_id': 0, name: 1 });
+  var sailorName = sailor ? sailor.name : '';
+
+  return { marinaName: marinaName, boatName: boatName, sailorName: sailorName };
+});
+
+print(tojson(reservations));
+```
+
+* Run the above script with `load('q5a.js')`
+* Result:
+
+```
+> use ass3
+> load('q5a.js')
+[
+	{
+		"marinaName" : "Sea View",
+		"boatName" : "Flying Dutch",
+		"sailorName" : "Peter"
+	},
+	{
+		"marinaName" : "Port Nicholson",
+		"boatName" : "Mermaid",
+		"sailorName" : "Milan"
+	}
+]
+true
+```
+
+The above script merged together in one command and it is the answer for b) See below.
+
+b) (16 marks) Find `marina names`, `boat names`, and `sailor names` having a reservation on “`2017-03-16`” using not more than two commands in mongo shell.
+
+```js
+// q5b.js
+print(tojson(
+  db.res_ref.find(
+    { 'reserves.date': '2017-03-16' },
+    { '_id': 0, marina: 1, 'reserves.boat': 1, 'reserves.sailor': 1 }
+  ).map(function(reservation) {
+    var marinaName = reservation.marina;
+    var boatNumber = reservation.reserves.boat;
+    var sailorId = reservation.reserves.sailor;
+
+    var boat = db.boat.findOne({ marina: marinaName, number: boatNumber }, { '_id': 0, name: 1 });
+    var boatName = boat ? boat.name : '';
+
+    var sailor = db.sailor.findOne({ sailorId: sailorId }, { '_id': 0, name: 1 });
+    var sailorName = sailor ? sailor.name : '';
+
+    return { marinaName: marinaName, boatName: boatName, sailorName: sailorName };
+  })
+));
 ```
