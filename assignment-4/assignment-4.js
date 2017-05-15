@@ -51,9 +51,25 @@ print();
 print('*** QUESTION 4 ***');
 print();
 var q4 = db.reserves.aggregate([
-  { $match: { 'reserves.date': { $exists: true } } },
-  { $group: { _id: '$reserves.sailor.sailorId', no_of_reserves_by_sailor: { $sum: 1 } } },
-  { $group: { _id: null, average_number_of_reserves_by_all_sailors: { $avg: '$no_of_reserves_by_sailor' } } },
-  { $project: { _id: false, average_number_of_reserves_by_all_sailors: true } }
+  {
+    $group: {
+      _id: null,
+      each_reserves_date: { $push: '$reserves.date' },
+      unique_sailor_ids: { $addToSet: '$reserves.sailor.sailorId' },
+      counter: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      no_of_reserves: { $size: '$each_reserves_date' },
+      no_of_sailors: { $size: '$unique_sailor_ids' }
+    }
+  },
+  {
+    $project: {
+      average_number_of_reserves_by_all_sailors: { $divide: ['$no_of_reserves', '$no_of_sailors'] }
+    }
+  },
 ]);
 q4.shellPrint();

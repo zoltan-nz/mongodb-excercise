@@ -117,11 +117,12 @@ Find the total number of `reserves` made by `sailors`. In your answer, the outpu
 (22 marks)
 
 Find the average number of reserves made by all sailors. If you develop a statement that contains a multistage aggregate() method that produces a correct result, you get 22 marks. If you develop a multi step procedure using manual interventions and get the correct result, you get 14 marks.
+
 Hint: The result produced by your (single) pipeline aggregation statement may be incorrect. Perform a manual checking. If you realize your statement produced an incorrect result, explain why it did and develop one that produces a correct result.
 
 We know from the result of Question 3, that we have `18` valid reservations. We know from the result of Question 1, that we have `7` unique sailor. The average number of reserves made by all sailors should be `18 / 7 = 2.5714`
 
-If we filter our database for `reserves.date`, we will miss one of the sailor who does not have any reservation, so the result will be `3` which is **INCORRECT**.
+If we filter our database for `reserves.date`, we will miss one of the sailor who does not have any reservation, so the result will be `3` which is **INCORRECT**:
 
 ```js
 db.reserves.aggregate([
@@ -132,4 +133,41 @@ db.reserves.aggregate([
 ]);
 
 { "average_number_of_reserves_by_all_sailors" : 3 }
+```
+
+After experimenting with a few hours, I realized, the best option to solve this task to collect dates and sailors in two sets, checking the size of these arrays and using `divide` to calculate the average number.
+
+Important to note, that we should not use any filter (`$match`), because we want to use the whole dataset to calculate the right number.
+
+In the first step we use `$push` to add each date to our array. `Push` keeps duplications, so the size of the array will represent the valid reservations. Using `$addToSet` for sailors helps to have a clean list of unique sailor ids. The size of this set shows the exact number of sailors and we add sailors with zero reservations as well.
+
+In the second step, we just use `$size` to get the length of our sets.
+
+In the third step we calculate the average number with `$divide`.
+
+```js
+> db.reserves.aggregate([
+  {
+    $group: {
+      _id: null,
+      each_reserves_date: { $push: '$reserves.date' },
+      unique_sailor_ids: { $addToSet: '$reserves.sailor.sailorId' },
+      counter: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      no_of_reserves: { $size: '$each_reserves_date' },
+      no_of_sailors: { $size: '$unique_sailor_ids' }
+    }
+  },
+  {
+    $project: {
+      average_number_of_reserves_by_all_sailors: { $divide: ['$no_of_reserves', '$no_of_sailors'] }
+    }
+  },
+]);
+
+{ "average_number_of_reserves_by_all_sailors" : 2.5714285714285716 }
 ```
