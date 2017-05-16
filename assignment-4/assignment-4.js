@@ -73,3 +73,59 @@ var q4 = db.reserves.aggregate([
   },
 ]);
 q4.shellPrint();
+
+// Question 5
+print();
+print('*** QUESTION 5 ***');
+print();
+var sailorName = 'Paul';
+
+var sailorSkills = db.reserves.distinct('reserves.sailor.skills', { 'reserves.sailor.name': sailorName });
+print('Sailor: ' + sailorName);
+print('Skills: ' + sailorSkills);
+
+var q5detailed = db.reserves.aggregate([
+  { $match: { 'reserves.boat.driven_by': { $exists: true, $ne: [] } } },
+  {
+    $group: {
+      _id: '$reserves.boat.number',
+      name: { $first: '$reserves.boat.name' },
+      driven_by: { $first: '$reserves.boat.driven_by' }
+    }
+  },
+  {
+    $project: {
+      _id: true,
+      name: true,
+      driven_by: true,
+      sailor_can_drive: { $setIsSubset: ['$driven_by', sailorSkills] }
+    }
+  }
+]);
+print('Detailed list:');
+q5detailed.shellPrint();
+
+print();
+var q5onlyBoatNames = db.reserves.aggregate([
+  { $match: { 'reserves.boat.driven_by': { $exists: true, $ne: [] } } },
+  {
+    $group: {
+      _id: '$reserves.boat.number',
+      name: { $first: '$reserves.boat.name' },
+      driven_by: { $first: '$reserves.boat.driven_by' }
+    }
+  },
+  {
+    $group: {
+      _id: null,
+      boats: { $addToSet: { $cond: [{ $setIsSubset: ['$driven_by', sailorSkills] }, '$name', 0] } }
+    }
+  },
+  { $unwind: '$boats' },
+  { $match: { boats: { $type: 2 } } },
+  { $group: { _id: null, boatNames: { $addToSet: '$boats' } } },
+  { $project: { _id: false, boatNames: true }}
+
+]);
+print('List of boat names:');
+q5onlyBoatNames.shellPrint();

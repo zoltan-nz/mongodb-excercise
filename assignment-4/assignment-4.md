@@ -171,3 +171,13 @@ In the third step we calculate the average number with `$divide`.
 
 { "average_number_of_reserves_by_all_sailors" : 2.5714285714285716 }
 ```
+
+### Question 5
+(10 + 15 marks)
+
+The sailor Paul from Upper Hutt made a reservation for the boat Mermaid in the Port Nicholson marina. When a supervisor checked accepted reserves, he realized that according to Paul’s skills, he does not qualify to drive Mermaid. So, people from the Port Nicholson marina asked you, as a respected MongoDB expert, to design a procedure that will return all boats that a given sailor is qualified to drive. What will be your solution to the problem?
+
+Note: A sailor is qualified to drive a boat only if the boat’s `driven_by` array is not empty (null) and is a subset of the sailor’s `skills` array.
+
+Bonus:
+Use aggregate() method and JavaScripts to find sailors who made more than average reserves. You will get 15 bonus marks if you get a correct result, but do not insert manually constants into aggregate() method stages to answer the question.
