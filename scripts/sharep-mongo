@@ -1,0 +1,388 @@
+#!/bin/sh
+# Config a test Sharded DB.  Uses minimal setting.
+# Thus has only 1 configsvr (normally 3)
+# All journaling is switched off which saves many megaBytes of disk space at
+# the expense of a higher chance of db corruption on a server crash
+#
+# Directory structure is
+#  Base Directory/
+#                /data/sharep-cfg0         # config server data directory
+#                     /sharep-rs0-[0..2]   # 3 replication servers for rs0
+#                     /sharep-rs1-[0..2]   # 3 replication servers for rs1
+#
+#               /log              # log files
+#               /run              # process pid files
+#
+# Sets up  1 mongod configsvr  port: 27019 logFile: mongod-sharep-cfg0.log
+#          1 mongos port: 27017 logFile: mongos-sharep-0.log
+#          6 mongod's (2 replication sets  with 3 mongod servers per set)
+#                      sets  rs0: ports: 27020,27021,27022  data directories: sharep-rs0-[0..2]
+#                                  logFiles: mongod-sharep-rs0-[0,1,2].log
+#                            rs1: ports: 27023,27024,27025  data directories: sharep-rs1-[0..2]
+#                                  logFiles: mongod-sharep-rs1-[0,1,2].log
+#
+#
+#
+#
+
+
+#basePath=/local/scratch/mongodb/$USER
+basePath=/vol/x1/swen432/$USER
+#if [ $USER = 'pmogin' ]; then
+#    basePath=$HOME/mongodb
+#fi
+dbPath=$basePath/data
+logPath=$basePath/log
+pidPath=$basePath/run
+
+
+cfgPortNr=27019 # default
+basePort=27020  # start port number for 6 mongod processes port 27020 to 27025
+cfgPath=$dbPath/sharep-cfg0
+
+function cleanup {
+    rm -R -v $dbPath/sharep-cfg0/*
+    rm -R -v $dbPath/sharep-rs*
+}
+
+function cleanall {
+    cleanup
+    rm -R -v $logPath/mongo[sd]-sharep*.log*
+    rm -R -v $pidPath/mongo[sd]-sharep*.pid
+}
+
+function chkLockFile {
+    lockFile=$1/mongod.lock
+    if [ -s $lockFile ]; then
+        pid=`pgrep -F $lockFile`
+        if (($? == 0)); then
+           echo "Mongo server already running, pid $pid";
+           return 1
+        else
+           echo "Server not shutdown correctly, deleting old lock file $lockFile";
+           rm -v $lockFile
+        fi
+    fi
+}
+
+function stop {
+    mongop=`pgrep -U $USER -a -f "mongo.*$dbPath/sharep.*"`
+    mongops=`pgrep -U $USER -a -f "mongos.*$basePath.*"`
+    if [ "$mongop" != "" ]; then
+        echo "Stopping processes"
+        echo "$mongop"
+        echo "$mongops"
+        pkill  -f -u $USER "mongod.*$dbPath/sharep.*"
+        pkill  -f -u $USER "mongos.*$basePath.*"
+    fi
+    #pkill -F $pidPath/mongod-cfg0.pid
+    #pkill -F $pidPath/mongos-0.pid
+    #for nr in {0..2}; do
+    #    pkill -F $pidPath/mongod-db$nr.pid
+    #done
+}
+
+function startup {
+    if [ ! -e $logPath ]; then
+        mkdir -vp $logPath
+    fi
+    if [ ! -e $pidPath ]; then
+        mkdir -vp $pidPath
+    fi
+    if [ ! -e $cfgPath ]; then
+        mkdir -vp $cfgPath
+    fi
+    if [ -d $cfgPath ]; then
+        if chkLockFile $cfgPath ;then
+            cfgCmd="mongod --port $cfgPortNr --configsvr --fork --nojournal --smallfiles --dbpath $cfgPath --logpath $logPath/mongod-sharep-cfg0.log --pidfilepath  $pidPath/mongod-sharep-cfg0.pid"
+            echo "Starting mongod --configsvr"
+            $cfgCmd
+        fi
+    else
+        echo "$cfgPath either does't exist or is not a directory"
+        exit
+    fi
+
+    echo "Starting mongos"
+    svrCmd="mongos --port 27017 --configdb 127.0.0.1:$cfgPortNr --chunkSize 1 --fork --logpath $logPath/mongos-sharep-0.log --pidfilepath $pidPath/mongos-sharep-0.pid"
+    $svrCmd
+    #,127.0.0.1:27022,127.0.0.1:27023"
+
+
+    cnt=0
+    for repNr in {0..1}
+    do
+        for nr in {0..2}
+        do
+            portNr=$(($basePort+$cnt))
+            fname=sharep-rs$repNr-$nr
+            echo "Starting mongod --port $portNr $fname"
+            mdbPath=$dbPath/$fname
+            if [ ! -e $mdbPath ]; then
+                mkdir -v $mdbPath
+            fi
+            if [ -d $mdbPath ]; then
+                if chkLockFile $mdbPath ;then
+                    cmd="mongod --port $portNr --dbpath $mdbPath --logpath $logPath/mongod-$fname.log --pidfilepath $pidPath/mongod-$fname.pid --replSet rs$repNr --smallfiles --nojournal --oplogSize 128 --fork"
+                    $cmd
+                fi
+            fi
+            cnt=$(($cnt+1))
+        done
+    done
+}
+
+function check_params {
+    repNr=$1
+    if ! [[ $repNr =~ ^[01]$ ]]; then
+      echo "Replication Set number must be 0 or 1"
+      exit 1
+    fi
+    nodeNr=$2
+    if ! [[ $nodeNr =~ ^[012]$ ]]; then
+        echo "Replication Node number must be one of  0,1,2 "
+        exit 1
+    fi
+}
+
+function connect {
+    if [ $# -eq 0 ]; then
+        mongo --port 27017
+    elif [ $# -eq 2 ]; then
+        check_params $1 $2
+        portNr=$(($basePort+($1*3+$2)))
+        mongo --port $portNr
+    else
+        echo "connect must have zero parameters too connect to mongos)
+or two parameters to connect to mongod replication sets)"
+    fi
+}
+
+function init_testdata {
+    mongo --port 27017 < /vol/courses/swen432/mongodb/load_shard.js
+}
+
+function show_status {
+    if [ $# -eq 0 ]; then
+        mongo --port 27017 --eval "sh.status()"
+    elif [ $# -eq 1 ]; then
+        p1=$1
+        p2=0
+    elif [ $# -eq 2 ]; then
+        p1=$1
+        p2=$2
+    fi
+    if [ $1 ]; then
+        check_params $p1 $p2
+        portNr=$(($basePort+($p1*3+$p2)))
+        mongo --port $portNr --eval "printjson(rs.status())"
+    fi
+}
+
+
+
+function stop_single_mongod {
+    check_params $1 $2
+    repNr=$1
+    nodeNr=$2
+    portNr=$(($basePort+($repNr*3+$nodeNr)))
+    echo "Stopping mongod --port $portNr sharep-rs$repNr-$nodeNr"
+    pkill  -f -u $USER "mongod.*$dbPath/sharep-rs$repNr-$nodeNr"
+}
+
+function start_single_mongod {
+    check_params $1 $2
+    repNr=$1
+    nodeNr=$2
+    fname=sharep-rs$repNr-$nodeNr
+    portNr=$(($basePort+($repNr*3+$nodeNr)))
+    mdbPath=$dbPath/$fname
+    mongop=`pgrep -a -f "mongo.*$mdbPath.*"`
+    if [ "$mongop" != "" ]; then
+      echo "Mongod server already running"
+      echo $mongop
+      return
+    fi
+    echo "Starting mongod --port $portNr $fname"
+    if chkLockFile $mdbPath ;then
+        cmd="mongod --port $portNr --dbpath $mdbPath --logpath $logPath/mongod-$fname.log --pidfilepath $pidPath/mongod-$fname.pid --replSet rs$repNr --smallfiles --nojournal --oplogSize 128 --fork"
+        $cmd
+    fi
+}
+
+function start_rep_set {
+    repNr=$1
+    for nodeNr in {0..2}; do
+        start_single_mongod $repNr $nodeNr
+    done
+}
+
+function stop_rep_set {
+    repNr=$1
+    for nodeNr in {0..2}; do
+        stop_single_mongod $repNr $nodeNr
+    done
+}
+
+
+function init_sha {
+    # Connect to mongos, and add shards
+    mongo  --port 27017 --eval "
+sh.addShard(\"rs0/127.0.0.1:27020\");
+sh.addShard(\"rs1/127.0.0.1:27023\");
+sh.status();
+";
+
+    echo "To enable Sharding for a Database
+    # Connect to mongos
+    mongo --port 27017
+    # Enable Sharding on DB
+    sh.enableSharding(\"<database>\")
+
+    #Enable Sharding for a Collection
+    1. Determine what you will use for the shard key.
+    2. Create an index on the shard key \"db.collection.ensureIndex({<field>: 1 })\"
+    3. Enable sharding for a collection by issuing the sh.shardCollection()
+       sh.shardCollection(\"<database>.<collection>\", shard-key-pattern)
+
+    E.g  Assuming no mydb datbase exists the commands below create a empty db with a empty collection with
+         a index on a nonexisting field. One you start populating the collection the right thing will happen.
+
+      use mydb
+      sh.enableSharding(\"mydb\")
+      db.user.ensureIndex({\"user_id\":1}) # Creates user collection with a index on a field called \"user_id\"
+      sh.shardCollection(\"mydb.user\",{\"user_id\":1})
+
+
+
+"
+    #db.printShardingStatus()
+    #sh.status({verbose:1})
+
+}
+
+function init_rep {
+    firstPort=$1
+    repNr=$2
+    mongo --port $firstPort --eval "
+rs.initiate({_id: \"rs$repNr\",members: [{_id: 0,host: \"127.0.0.1:$firstPort\"}
+        ,{_id: 1,host: \"127.0.0.1:$(($firstPort+1))\"}
+        ,{_id: 2,host: \"127.0.0.1:$(($firstPort+2))\"}
+]});
+printjson(rs.conf());
+rs.printReplicationInfo();
+printjson(rs.status());
+"
+}
+#sh.status({verbose:1})
+
+function wait_on_rep {
+   port=$1
+   repNr=$2
+   status=`mongo --quiet --port $port --eval "rs.status()['ok']"`
+   #echo "wait_on_rep status: $status"
+   while [ $status -eq 0 ]
+   do
+        echo "Waiting 10 seconds for replication set rs$repNr to complete initializing"
+        sleep 10
+        status=`mongo --quiet --port $port --eval "rs.status()['ok']"`
+   done
+}
+
+
+
+function init_all_reps {
+    init_rep 27020 0
+    init_rep 27023 1
+    wait_on_rep 27020 0
+    wait_on_rep 27023 1
+}
+
+
+case "$1" in
+    connect)
+       shift
+       connect $@
+    ;;
+    start)
+        if [ $# -eq 1 ]; then
+            startup
+        elif [ $# -eq 2 ]; then
+            start_rep_set $2
+        elif [ $# -eq 3 ]; then
+            start_single_mongod $2 $3
+        fi
+    ;;
+    stop)
+         if [ $# -eq 1 ]; then
+            stop
+        elif [ $# -eq 2 ]; then
+            stop_rep_set $2
+        elif [ $# -eq 3 ]; then
+            stop_single_mongod $2 $3
+        fi
+    ;;
+    init)
+        startup
+        init_all_reps
+        echo "Waiting 20 seconds for replication sets to complete initializing"
+        sleep 20
+        init_sha
+    ;;
+    clean)
+        stop
+        cleanup
+    ;;
+    cleanall)
+        stop
+        cleanall
+    ;;
+    status)
+       shift
+       show_status #$@
+    ;;
+    test)
+        init_testdata
+    ;;
+    *)
+    echo "usage: sharep-mongo {init|clean|cleanall|connect|start|stop|test|status} [replication set number \"0,1\"] [node number \"0,1,2\"]
+
+   init:  Creates a new Mongo cluster and starts it
+
+   clean: Stops (if running) and deletes Mongo DB files (Not log files)
+   cleanall: Stops (if running) and deletes Mongo DB files including log files
+   start,stop: p1 p2
+      If no other parameters are given stops/starts ALL servers
+      p1 \"replication set number [0 or 1]\" Starts/Stops all nodes for that replication set
+      p2 \"node number [0,1,2]\" Start/Stop single mongod process in the replication set given in p1.
+
+   connect: [p1 p2] No parameters connects to mongos server
+                     or P1 and p2 must be given to connect to a mongod replication node
+                     where p1 = [ 0 or 1] and p2 = [ 0,1,2 ]
+
+   test: Creates a shard db collection mydb.user { \"user_id\":<Integer 0 to ...>, \"name\":<a name>, \"number\":<random Integer> }
+         \"user_id\" is indexed and is the shard key.
+         100000 records are inserted.
+
+   status: show Shard status
+
+   Configures Mongo Cluster as below
+
+   Directory structure is
+   /local/scratch/mongodb/{USERNAME}/
+                 /data/sharep-cfg0         # config server data directory
+                      /sharep-rs0-[0..2]   # 3 replication servers for rs0
+                      /sharep-rs1-[0..2]   # 3 replication servers for rs1
+
+                /log              # log files
+                /run              # process pid files
+
+  Sets up  1 mongod configsvr  port: 27019 logFile: mongod-sharep-cfg0.log
+           1 mongos port: 27017 logFile: mongos-sharep-0.log
+           6 mongod's (2 replication sets  with 3 mongod servers per set)
+                       sets  rs0: ports: 27020,27021,27022  data directories: sharep-rs0-[0..2]
+                                   logFiles: mongod-sharep-rs0-[0,1,2].log
+                             rs1: ports: 27023,27024,27025  data directories: sharep-rs1-[0..2]
+                                   logFiles: mongod-sharep-rs1-[0,1,2].log
+"
+esac

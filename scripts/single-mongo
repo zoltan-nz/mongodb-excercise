@@ -1,0 +1,131 @@
+#!/bin/sh
+# Starts a single stand alone mongod server
+# All journaling is switched off which saves many megaBytes of disk space at
+# the expense of a higher chance of db corruption on a server crash
+#
+# Directory structure is
+#  Base Directory/
+#                /data/single # data directories
+#               /log              # log files
+#               /run              # process pid files
+#
+# Sets up  1 mongod port: 27019 logFile: mongos-single.log
+#
+#
+#
+#
+#
+
+
+#basePath=/local/scratch/mongodb/$USER
+basePath=/vol/x1/swen432/$USER
+#if [ $USER = 'pmogin' ]; then
+#    basePath=$HOME/mongodb
+#fi
+dbPath=$basePath/data
+logPath=$basePath/log
+pidPath=$basePath/run
+
+
+cfgPortNr=27017 # default
+cfgPath=$dbPath/single
+
+function cleanup {
+    rm -R -v $dbPath/single/*
+}
+
+function chkLockFile {
+    lockFile=$cfgPath/mongod.lock
+    if [ -s $lockFile ]; then
+        pid=`pgrep -F $lockFile`
+        if [ -n "$pid"  ]; then
+           echo "Mongo server already running, pid $pid";
+           exit 1
+        else
+           echo "Mongo Server not shutdown correctly, deleting old lock file $lockFile";
+           rm -v $lockFile
+        fi
+    fi
+}
+
+
+function cleanall {
+    cleanup
+    rm -v $pidPath/mongod-single.pid
+    rm -v $logPath/mongod-single.log*
+}
+
+function stop {
+    mongop=`pgrep -a -f 'mongod --port 27017'`
+    if [ "$mongop" != "" ]; then
+       echo "Stopping process"
+       echo $mongop
+       pkill  -f -u $USER "mongod.*$cfgPath.*"
+    fi
+    #pkill -F $pidPath/mongod-single.pid
+}
+
+function startup {
+    chkLockFile
+    mongop=`pgrep -a -f 'mongod --port 27017'`
+    if [ "$mongop" != "" ]; then
+      echo "Mongod server already running"
+      echo $mongop
+      exit
+    fi
+    if [ ! -e $logPath ]; then
+        mkdir -vp $logPath
+    fi
+    if [ ! -e $pidPath ]; then
+        mkdir -vp $pidPath
+    fi
+
+    if [ ! -e $cfgPath ]; then
+        mkdir -vp $cfgPath
+    fi
+    if [ -d $cfgPath ]; then
+        #mongod --port 27017 --fork --dbpath /local/scratch/mongodb/data/single --logpath /local/scratch/mongodb/log/mongo-single.log
+        cfgCmd="mongod --port $cfgPortNr --fork --nojournal --smallfiles --dbpath $cfgPath --logpath $logPath/mongod-single.log --pidfilepath  $pidPath/mongod-single.pid"
+        echo "Starting mongod --port 27017"
+        $cfgCmd
+    else
+        echo "$cfgPath either does't exist or is not a directory"
+        exit
+    fi
+}
+
+function init_testdata {
+    mongo --port 27017 < /vol/courses/swen432/mongodb/mydb_user_data.js
+}
+
+
+case "$1" in
+    start)
+        startup
+    ;;
+    stop)
+        stop
+    ;;
+    clean)
+        stop
+        cleanup
+    ;;
+    cleanall)
+        stop
+        cleanall
+    ;;
+    test)
+        init_testdata
+    ;;
+    *)
+    echo "usage: single-mongo {start|stop|clean|cleanall}
+
+   start: Starts a stand alone mongod server
+
+   clean: Stops (if running) and deletes Mongo DB files (Not log files)
+   cleanall: Same as clean but also deletes log files
+   stop:  stop all servers
+   test: Creates a db collection mydb.user { \"user_id\":<Integer 0 to ...>, \"name\":<a name>, \"number\":<random Integer> }
+         100000 records are inserted.
+"
+esac

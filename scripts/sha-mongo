@@ -1,0 +1,305 @@
+#!/bin/sh
+# Config a test Sharded DB.  Uses minimal setting.
+# Thus has only 1 configsvr (normally 3)
+# All journaling is switched off which saves many megaBytes of disk space at
+# the expense of a higher chance of db corruption on a server crash
+#
+# Directory structure is
+#  Base Directory/
+#                /data/shadb-cfg0 # data directories
+#                     /shadb0
+#                     /shadb1
+#                     /shadb2
+#               /log              # log files
+#               /run              # process pid files
+#
+# Sets up  1 mongod configsvr  port: 27019 logFile: mongod-shadb-cfg0.log
+#          1 mongos port: 27019 logFile: mongos-0.log
+#          3 mongod's (Shards) ports: 27020,27021,27022  data directories: shadb0 to shadb2
+#                              logFiles: mongod-shadb[0,1,2].pid
+#
+#
+#
+#
+
+basePort=27020
+#basePath=/local/scratch/mongodb/$USER
+basePath=/vol/x1/swen432/$USER
+#if [ $USER = 'pmogin' ]; then
+#    basePath=$HOME/mongodb
+#fi
+dbPath=$basePath/data
+logPath=$basePath/log
+pidPath=$basePath/run
+cfgFile="$basePath/shadb.cfg"
+
+
+cfgPortNr=27019 # default
+cfgPath=$dbPath/shadb-cfg0
+
+
+function read_cfg() {
+    local  __resultvar=$1 # passed variable name to return result in
+    if [ -f $cfgFile ]; then
+        local __nrNodes=`cat $cfgFile`
+        if ! [[ $__nrNodes =~ ^[1-9][0-1]?$ ]]; then
+          echo "$cfgFile, Configuration file is invalid "
+          exit 1
+        fi
+        eval $__resultvar="$__nrNodes"; # set result variable
+    else
+        echo "$cfgFile file doesn't exist. You probably need to create a database cluster first ('init' parameter)"
+        exit 1
+    fi
+}
+
+function check_param {
+    nodeNr=$1
+    read_cfg maxServerNr
+    maxServerNr=$(($maxServerNr-1))
+    if ! [ $nodeNr -ge 0 -a $nodeNr -le $maxServerNr ]; then
+        echo "Node number must be one of 0 to $maxServerNr"
+        exit 1
+    fi
+}
+
+function cleanup {
+    rm -R -v $dbPath/shadb-cfg0/*
+    rm -v $cfgFile
+    for nr in {0..2}
+    do
+        rm -R -v $dbPath/shadb*
+    done
+}
+
+function cleanall {
+    cleanup
+    rm -R -v $logPath/mongo[sd]-shadb*.log*
+    rm -R -v $pidPath/mongo[sd]-shadb*.pid
+}
+
+function chkLockFile {
+    lockFile=$1/mongod.lock
+    if [ -s $lockFile ]; then
+        pid=`pgrep -F $lockFile`
+        if (($? == 0)); then
+           echo "Mongo server already running, pid $pid";
+           return 1
+        else
+           echo "Server not shutdown correctly, deleting old lock file $lockFile";
+           rm -v $lockFile
+        fi
+    fi
+}
+
+
+function stop {
+    mongop=`pgrep -U $USER -a -f "mongo.*$dbPath/shadb.*"`
+    mongops=`pgrep -U $USER -a -f "mongos.*$basePath.*"`
+    if [ "$mongop" != "" ]; then
+        echo "Stopping processes"
+        echo "$mongop"
+        echo "$mongops"
+        pkill  -f -u $USER "mongod.*$dbPath/shadb.*"
+        pkill  -f -u $USER "mongos.*$basePath.*"
+    fi
+    #pkill -F $pidPath/mongod-cfg0.pid
+    #pkill -F $pidPath/mongos-0.pid
+    #for nr in {0..2}; do
+    #    pkill -F $pidPath/mongod-db$nr.pid
+    #done
+}
+
+function stop_single_mongod {
+    check_param $1
+    nodeNr=$1
+    portNr=$(($basePort+$nodeNr))
+    echo "Stopping mongod --port $portNr shadb$nodeNr"
+    pkill  -f -u $USER "mongod.*$dbPath/shadb$nodeNr"
+}
+
+function start_single_mongod {
+    check_param $1
+    nodeNr=$1
+    portNr=$(($basePort+$nodeNr))
+    mdbPath=$dbPath/shadb$nodeNr
+    mongop=`pgrep -a -f "mongo.*$mdbPath.*"`
+    if [ "$mongop" != "" ]; then
+      echo "Mongod server already running"
+      echo $mongop
+      return
+    fi
+    echo "Starting mongod --port $portNr shadb$nodeNr"
+    if [ ! -e $mdbPath ]; then
+        mkdir -v $mdbPath
+    fi
+    if [ -d $mdbPath ]; then
+        if chkLockFile $mdbPath ;then
+            cmd="mongod --port $portNr --smallfiles --fork --nojournal --dbpath $mdbPath --logpath $logPath/mongod-shadb$nodeNr.log --pidfilepath $pidPath/mongod-shadb$nodeNr.pid --oplogSize 128"
+            $cmd
+        fi
+    fi
+}
+
+function connect {
+    if [ $# -eq 0 ]; then
+        mongo --port 27017
+    elif [ $# -eq 1 ]; then
+        check_param $1
+        portNr=$(($basePort+$1))
+        mongo --port $portNr
+    else
+        echo "connect must have zero parameters too connect to mongos)
+or 1 parameter to connect to a mongod server)"
+    fi
+}
+
+function init_testdata {
+    mongo --port 27017 < /vol/courses/swen432/mongodb/load_shard.js
+}
+
+function show_status {
+    mongo --port 27017 --eval "sh.status()"
+}
+
+
+function startup {
+    if [ $# -gt 0 ]; then
+        maxNr=$1
+        if ! [[ $maxNr =~ ^[1-9][0-1]?$ ]]; then
+           echo "Number of mongod (shards) servers must be one of 1 to 11"
+           exit 1
+        fi
+        echo "$maxNr" > $cfgFile
+    else
+        read_cfg maxNr
+    fi
+    if [ ! -e $logPath ]; then
+        mkdir -vp $logPath
+    fi
+    if [ ! -e $pidPath ]; then
+        mkdir -vp $pidPath
+    fi
+    #mongod --port 27019 --configsvr --fork --dbpath /local/scratch/mongodb/data/configdb-0 --logpath /local/scratch/mongodb/log/mongo-cfg0.log
+    if [ ! -e $cfgPath ]; then
+        mkdir -vp $cfgPath
+    fi
+    if [ -d $cfgPath ]; then
+        if chkLockFile $cfgPath ;then
+            cfgCmd="mongod --port $cfgPortNr --configsvr --fork --nojournal --smallfiles --dbpath $cfgPath --logpath $logPath/mongod-shadb-cfg0.log --pidfilepath  $pidPath/mongod-shadb-cfg0.pid"
+            echo "Starting mongod --configsvr"
+            $cfgCmd
+        fi
+    else
+        echo "$cfgPath either does't exist or is not a directory"
+        exit
+    fi
+
+    echo "Starting mongos"
+    svrCmd="mongos --port 27017 --configdb 127.0.0.1:$cfgPortNr --chunkSize 1 --fork --logpath $logPath/mongos-shadb-0.log --pidfilepath $pidPath/mongos-shadb-0.pid"
+    $svrCmd
+    #,127.0.0.1:27022,127.0.0.1:27023"
+
+    for ((nr=0;nr<$maxNr;nr++))
+    do
+        start_single_mongod $nr
+    done
+}
+
+function init_sha {
+    maxNr=$1
+    cmd=''
+    for ((nr=0;nr<$maxNr;nr++))
+    do
+       portNR=$(($basePort+$nr))
+       cmd="$cmd sh.addShard(\"127.0.0.1:$portNR\");"
+    done
+    cmd="$cmd sh.status();"
+    # Connect to mongos, and add shards
+    echo "$cmd"
+    mongo  --port 27017 --eval "$cmd"
+
+    echo "To enable Sharding for a Database
+    # Connect to mongos
+    mongo --port 27017
+    # Enable Sharding on DB
+    sh.enableSharding(\"<database>\")
+
+    #Enable Sharding for a Collection
+    sh.shardCollection(\"<database>.<collection>\", shard-key-pattern)
+    # EG sh.shardCollection(\"test.user\", { \"_id\": 1 } )
+"
+    #db.printShardingStatus()
+}
+
+case "$1" in
+    start)
+        if [ $# -eq 1 ]; then
+            startup
+        elif [ $# -eq 2 ]; then
+            start_single_mongod $2
+        fi
+    ;;
+    stop)
+        if [ $# -eq 1 ]; then
+            stop
+        elif [ $# -eq 2 ]; then
+            stop_single_mongod $2
+        fi
+    ;;
+    connect)
+       shift
+       connect $@
+    ;;
+    init)
+        if [ $# -eq 2 ]; then
+           nrShards=$2
+        else
+           echo "Using default number (3) of mongod (shard) servers"
+           nrShards=3
+        fi
+        startup  $nrShards
+        echo "Waiting 10 seconds for mongod servers to complete initializing"
+        sleep 10
+        init_sha $nrShards
+    ;;
+    clean)
+        stop
+        cleanup
+    ;;
+    cleanall)
+        stop
+        cleanall
+    ;;
+    status)
+       show_status
+    ;;
+    test)
+        init_testdata
+    ;;
+    *)
+    echo "usage: sha-mongo {start|init|clean|stop|connect|status|test} p1
+
+   init:  Creates and starts a new Mongo cluster with p1 mongod servers.
+          p1 is a integer from 1 to 11 (Default: 3)
+
+   clean: Stops (if running) and deletes Mongo DB files (Not log files)
+   cleanall: Same as clean but also deletes log files.
+
+   start,stop: p1
+      If no other parameters are given stops/starts ALL servers
+      p1 \"mongod (shard) number [0 to number of servers ]\" Starts/Stops single mongod (shard) node
+
+
+   connect: [p1] No parameters connects to mongos server
+                 or p1 given to connect to a mongod shard node
+                 where p1 = integer
+
+   status: connects to mongos server and shows shard status
+
+   test: Creates a shard db collection mydb.user { \"user_id\":<Integer 0 to ...>, \"name\":<a name>, \"number\":<random Integer> }
+         \"user_id\" is indexed and is the shard key.
+         100000 records are inserted.
+
+"
+esac

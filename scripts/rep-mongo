@@ -1,0 +1,142 @@
+#!/bin/sh
+# Config a replica set of 3 servers
+
+#basePath=/local/scratch/mongodb/$USER
+basePath=/vol/x1/swen432/$USER
+#if [ $USER = 'pmogin' ]; then
+#    basePath=$HOME/mongodb
+#fi
+dbPath=$basePath/data
+logPath=$basePath/log
+pidPath=$basePath/run
+basePort=27017
+
+function cleanup {
+    rm -Rv $dbPath/rs0-[012]/*
+}
+
+function cleanall {
+    cleanup
+    rm -v $logPath/mongod-rs0-*.log*
+    rm -v $pidPath/mongod-rs0-*.pid
+}
+
+function chkLockFile {
+    lockFile=$1/mongod.lock
+    if [ -s $lockFile ]; then
+        pid=`pgrep -F $lockFile`
+        if (($? == 0)); then
+           echo "Mongo server already running, pid $pid";
+           return 1
+        else
+           echo "Server not shutdown correctly, deleting old lock file $lockFile";
+           rm -v $lockFile
+        fi
+    fi
+}
+
+function stop {
+    #for nr in {0..2}; do
+    #    pkill -F $pidPath/mongod-rs0-$nr.pid
+    #done
+    mongop=`pgrep -l -f "mongo.*$dbPath/rs0.*"`
+    if [ "$mongop" != "" ]; then
+        echo "Stopping processes"
+        echo "$mongop"
+        pkill  -f -u $USER "mongo.*$dbPath/rs0.*"
+    fi
+}
+
+function startup {
+    mongop=`pgrep -a -f "mongo.*$dbPath/rs0.*"`
+    if [ "$mongop" != "" ]; then
+      echo "Mongod servers already running"
+      echo $mongop
+      exit
+    fi
+    if [ ! -e $logPath ]; then
+        mkdir -vp $logPath
+    fi
+    if [ ! -e $pidPath ]; then
+        mkdir -vp $pidPath
+    fi
+    for nr in {0..2}
+    do
+        portNr=$(($basePort+$nr))
+        mdbPath=$dbPath/rs0-$nr
+        echo "Starting mongod --port $portNr $mdbPath"
+        if [ ! -e $mdbPath ]; then
+            mkdir -vp $mdbPath
+        fi
+        if [ -d $dbPath ]; then
+            if chkLockFile $mdbPath ;then
+                cmd="mongod --port $portNr --dbpath $mdbPath --logpath $logPath/mongod-rs0-$nr.log --pidfilepath $pidPath/mongod-rs0-$nr.pid --replSet rs0 --smallfiles --nojournal --oplogSize 128 --fork"
+                $cmd
+            fi
+        fi
+    done
+}
+
+#mongod -f mongod-rs0-0.conf
+#mongod -f mongod-rs0-1.conf
+#mongod -f mongod-rs0-2.conf
+
+function init_rep {
+    # connect to a mongo server and config replica set
+    mongo --port 27017 --eval "
+rs.initiate({_id: \"rs0\",members: [{_id: 0,host: \"127.0.0.1:27017\"}
+        ,{_id: 1,host: \"127.0.0.1:27018\"}
+        ,{_id: 2,host: \"127.0.0.1:27019\"}
+]});
+printjson(rs.conf());
+rs.printReplicationInfo();
+printjson(rs.status());
+"
+}
+
+function init_testdata {
+    mongo --port 27017 < /vol/courses/swen432/mongodb/mydb_user_data.js
+}
+
+#rs.printSlaveReplicationInfo()
+
+case "$1" in
+    start)
+        startup
+    ;;
+    stop)
+        stop
+    ;;
+    init)
+        startup
+        init_rep
+    ;;
+    clean)
+        stop
+        cleanup
+    ;;
+    cleanall)
+        stop
+        cleanall
+    ;;
+    test)
+        init_testdata
+    ;;
+    *)
+    echo "usage: rep-mongo {start|init|clean|cleanall|stop}
+
+   init: Creates and starts 3 mongod servers then initializies a replication set across the three.
+
+   start: Starts an existing cluster (init must have been run before).
+   clean: Stops (if running) and deletes Mongo DB files (Not log files).
+   cleanall: Same as clean but also deletes log files.
+   stop:  Stop all servers.
+   test: Creates a db collection mydb.user { \"user_id\":<Integer 0 to ...>, \"name\":<a name>, \"number\":<random Integer> }
+         100000 records are inserted.
+"
+esac
+#rs.add(\"127.0.0.1:27018\");
+#rs.add(\"127.0.0.1:27019\");
+#rs.conf(); # show config
+#rs.status(); # show status
+#rs.slaveOk() ON NON PRIMARY TO ACCESS ANY DATA

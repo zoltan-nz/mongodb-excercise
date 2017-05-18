@@ -105,6 +105,7 @@ var q5detailed = db.reserves.aggregate([
 print('Detailed list:');
 q5detailed.shellPrint();
 
+// Return only the list of boat names in an array.
 print();
 var q5onlyBoatNames = db.reserves.aggregate([
   { $match: { 'reserves.boat.driven_by': { $exists: true, $ne: [] } } },

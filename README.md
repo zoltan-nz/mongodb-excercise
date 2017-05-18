@@ -21,3 +21,9 @@ net:
   bindIp: 127.0.0.1
 ```
 
+Creating cluster
+
+```
+$ mongod --configsvr --config ./mongod.conf
+$ mongos --port 27017 --configdb 127.0.0.1:27019 --chunkSize 1
+```
