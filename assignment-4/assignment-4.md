@@ -51,7 +51,7 @@ e.g.
 {"_id": 110, "name": "Paul", "skills": ["row"], "address": "Upper Hutt"}
 ```
 
-Answer:
+**Answer:**
 
 ```js
 > db.reserves.aggregate([
@@ -80,6 +80,8 @@ Answer:
 
 Find the `sailor` who made the *maximum number* of reservations. In your answer, sailor documents should have the structure of a simple (non embedded) document, containing fields: `sailorId`, `name`, `address`, and `no_of_reserves`.
 
+**Answer:**
+
 ```js
 > db.reserves.aggregate([
   { $match: { 'reserves.sailor.sailorId': { $exists: true } } },
@@ -90,12 +92,20 @@ Find the `sailor` who made the *maximum number* of reservations. In your answer,
       address: { $first: '$reserves.sailor.address' },
       no_of_reserves: { $sum: 1 }
     }
+  }, {
+    $project: {
+      _id: 0,
+      sailorId: '$_id',
+      name: 1,
+      address: 1,
+      no_of_reserves: 1
+    }
   },
   { $sort: { no_of_reserves: -1 } },
   { $limit: 1 }
 ]);
 
-{ "_id" : 818, "name" : "Milan", "address" : "Wellington", "no_of_reserves" : 6 }
+{ "name" : "Milan", "address" : "Wellington", "no_of_reserves" : 6, "sailorId" : 818 }
 ```
 
 ### Question 3
@@ -103,9 +113,13 @@ Find the `sailor` who made the *maximum number* of reservations. In your answer,
 
 Find the total number of `reserves` made by `sailors`. In your answer, the output document should contain just one field with the name `total_reserves`.
 
+**Answer:**
+
+Assuming a reservation is valid if it has a valid `reserves.date` and a `sailor`. (However, we don't have any document in our sample dataset which has date without sailor, so we can less strict in our later tasks. But keeping this assumption here help to show the usage of `$and` in our aggregation.)
+
 ```js
 > db.reserves.aggregate([
-  { $match: { 'reserves.date': { $exists: true } } },
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
   { $group: { _id: null, total_reserves: { $sum: 1 } } },
   { $project: { _id: false, total_reserves: true } }
 ]);
@@ -119,6 +133,8 @@ Find the total number of `reserves` made by `sailors`. In your answer, the outpu
 Find the average number of reserves made by all sailors. If you develop a statement that contains a multistage aggregate() method that produces a correct result, you get 22 marks. If you develop a multi step procedure using manual interventions and get the correct result, you get 14 marks.
 
 Hint: The result produced by your (single) pipeline aggregation statement may be incorrect. Perform a manual checking. If you realize your statement produced an incorrect result, explain why it did and develop one that produces a correct result.
+
+**Answer:**
 
 We know from the result of Question 3, that we have `18` valid reservations. We know from the result of Question 1, that we have `7` unique sailor. The average number of reserves made by all sailors should be `18 / 7 = 2.5714`
 
@@ -139,11 +155,11 @@ After experimenting with a few hours, I realized, the best option to solve this 
 
 Important to note, that we should not use any filter (`$match`), because we want to use the whole dataset to calculate the right number.
 
-In the first step we use `$push` to add each date to our array. `Push` keeps duplications, so the size of the array will represent the valid reservations. Using `$addToSet` for sailors helps to have a clean list of unique sailor ids. The size of this set shows the exact number of sailors and we add sailors with zero reservations as well.
+In the first step we use `$push` to add each date to our array. `Push` keeps duplications, so the size of the array will represent the valid number of reservations. (Assuming reservation is valid if `reserves.date` exists.)  Using `$addToSet` for sailors helps to have a clean list of unique sailor ids (without duplication). The size of this set shows the exact number of sailors and we add sailors with zero reservations as well.
 
 In the second step, we just use `$size` to get the length of our sets.
 
-In the third step we calculate the average number with `$divide`.
+In the third step we calculate the average number with `$divide`:
 
 ```js
 > db.reserves.aggregate([
@@ -200,28 +216,28 @@ Skills: row,swim
   },
   {
     $project: {
-      _id: true,
+      _id: false,
+      boat_number: '$_id',
       name: true,
       driven_by: true,
       sailor_can_drive: { $setIsSubset: ['$driven_by', sailorSkills] }
     }
   }
-]);
-> q5detailed.shellPrint();
+]);> q5detailed.shellPrint();
 
-{ "_id" : 131, "name" : "Penguin", "driven_by" : [ "row" ], "sailor_can_drive" : true }
-{ "_id" : 818, "name" : "Night Breeze", "driven_by" : [ "row" ], "sailor_can_drive" : true }
-{ "_id" : 919, "name" : "Mermaid", "driven_by" : [ "sail", "motor" ], "sailor_can_drive" : false }
-{ "_id" : 137, "name" : "Sea Gull", "driven_by" : [ "row" ], "sailor_can_drive" : true }
-{ "_id" : 717, "name" : "Tarakihi", "driven_by" : [ "row", "motor" ], "sailor_can_drive" : false }
-{ "_id" : 616, "name" : "Red Cod", "driven_by" : [ "sail", "motor" ], "sailor_can_drive" : false }
-{ "_id" : 110, "name" : "Dolphin", "driven_by" : [ "sail", "motor" ], "sailor_can_drive" : false }
-{ "_id" : 515, "name" : "Blue Shark", "driven_by" : [ "motor" ], "sailor_can_drive" : false }
-{ "_id" : 111, "name" : "Killer Whale", "driven_by" : [ "row" ], "sailor_can_drive" : true }
-{ "_id" : 313, "name" : "Flying Dutch", "driven_by" : [ "sail" ], "sailor_can_drive" : false }
+{ "name" : "Penguin", "driven_by" : [ "row" ], "boat_number" : 131, "sailor_can_drive" : true }
+{ "name" : "Night Breeze", "driven_by" : [ "row" ], "boat_number" : 818, "sailor_can_drive" : true }
+{ "name" : "Mermaid", "driven_by" : [ "sail", "motor" ], "boat_number" : 919, "sailor_can_drive" : false }
+{ "name" : "Sea Gull", "driven_by" : [ "row" ], "boat_number" : 137, "sailor_can_drive" : true }
+{ "name" : "Tarakihi", "driven_by" : [ "row", "motor" ], "boat_number" : 717, "sailor_can_drive" : false }
+{ "name" : "Red Cod", "driven_by" : [ "sail", "motor" ], "boat_number" : 616, "sailor_can_drive" : false }
+{ "name" : "Dolphin", "driven_by" : [ "sail", "motor" ], "boat_number" : 110, "sailor_can_drive" : false }
+{ "name" : "Blue Shark", "driven_by" : [ "motor" ], "boat_number" : 515, "sailor_can_drive" : false }
+{ "name" : "Killer Whale", "driven_by" : [ "row" ], "boat_number" : 111, "sailor_can_drive" : true }
+{ "name" : "Flying Dutch", "driven_by" : [ "sail" ], "boat_number" : 313, "sailor_can_drive" : false }
 ```
 
-The following script generates a simple array with suitable boat names for a specified driver:
+The following script generates a simple array with suitable boat names for a specified sailor. We use our `sailorSkills` variable from above:
  
 ```js
 > var q5onlyBoatNames = db.reserves.aggregate([
@@ -257,6 +273,8 @@ Use aggregate() method and JavaScripts to find sailors who made more than averag
 ### Question 6. Sharding
 
 Read carefully all subquestions of the question. You will use the same MongoDB deployment to answer several subquestions. Use the sha-mongo script to produce deployments with 2 shards, 5 shards, and 10 shards. Populate each of them by the user collection using the test parameter to the sha-mongo script.
+
+**Answers:**
 
 ```
 $ sha-mongo init 2
@@ -792,7 +810,7 @@ or
 		"127.0.0.1:27021" : [
 ```
 
-In case of 2: 2nd shard
+Lastly, let see where is our document in case of 2 shards. Our document is on 2nd shard. See the result below.
 
 ```
 mongos> db.user.find({ user_id: 55555 }).explain()
@@ -945,13 +963,15 @@ connecting to: 127.0.0.1:27025/test
 > use mydb
 ```
 
-1. Retrieve the document with user_id: 55555.
+i. Retrieve the document with user_id: 55555.
+
 ```
 > db.user.find({user_id: 55555})
 { "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : "Kristina", "number" : 1198 }
 ``` 
  
-2. Retrieve the document with user_id: 1.
+ii. Retrieve the document with user_id: 1.
+
 ```
 > db.user.find({user_id: 1})
 ```
@@ -966,14 +986,14 @@ connecting to: 127.0.0.1:27017/test
 > use mydb
 ```
 
-1. Retrieve the document with user_id: 55555.
+i. Retrieve the document with `user_id: 55555`.
 
 ```
 mongos> db.user.find({user_id: 55555})
 { "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : "Kristina", "number" : 1198 } 
 ```
 
-2. Retrieve the document with user_id: 1.
+ii. Retrieve the document with `user_id: 1`.
 
 ```
 mongos> db.user.find({user_id: 1})
@@ -984,7 +1004,7 @@ mongos> db.user.find({user_id: 1})
 
 MongoDB uses our main Config Server for storing the cluster's metadata and the map for the cluster's data set to shards. The Application Server uses Routers (mongos) to find documents in the cluster. 
 
-Because in question c) we connected to a shard server directly, it cannot see outside of own dataset. That shard had the record with id `55555`, we were able to retrieve, however the document with id 1 was not on the server. For that shard  doesn't exists the document with id `1`.
+Because in question c) we connected to a shard server directly, it cannot see outside of own dataset. That shard had the record with id `55555`, we were able to retrieve, however the document with id 1 was not on that server. The document with id `1` doesn't exists for that shard.
 
 On the other side, when we connected with `mongos` command to the `Router` and the `Application Server`, we had access to the `Config Servers` also, so we were able to find any document across the cluster on each shard, so we were able to retrieve documents with id `1` and with id `55555`.
 
@@ -999,7 +1019,7 @@ connecting to: 127.0.0.1:27017/test
 mongos> use mydb
 ```
 
-1. Retrieve the document with `user_id: 55555`.
+i. Retrieve the document with `user_id: 55555`.
 
 ```
 mongos> db.user.find({user_id: 55555})
@@ -1010,24 +1030,28 @@ error: {
 }
 ``` 
  
-2. Retrieve the document with `user_id: 1`.
+ii. Retrieve the document with `user_id: 1`.
 
 ```
 mongos> db.user.find({user_id: 1})
 { "_id" : ObjectId("5925794e2a56d195595c502f"), "user_id" : 1, "name" : "Jeff", "number" : 7993 }
 ```
 
-3. What percentage (roughly) of your database became unavailable? Will it become available again if you restart the mongod server?
+iii. What percentage (roughly) of your database became unavailable? Will it become available again if you restart the mongod server?
 
 We can see with `sh.status()` which range is stored on the 6th server: 
 `{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0005 Timestamp(7, 1)`
 
-Calculation: 
+Calculation:
+
+``` 
 55999-45999 = 10000
 10000 / 100000 = 0.1
 10% of the database is unavailable.
+```
 
-More experiment with our data:
+Let's have more experiment with our data:
+
 ```
 mongos> db.user.find({user_id: 45998})
 { "_id" : ObjectId("592579502a56d195595d03dc"), "user_id" : 45998, "name" : "Bill", "number" : 7914 }
@@ -1065,4 +1089,50 @@ mongos> db.user.find({user_id: 55998})
 ```
 
 Yes, we can retrieve our data again after we restarted the server.
+
+### Question 7. Sharding and Replication
+(16 marks)
+
+Use the `sharep-mongo` script to produce a deployment with `2` shards having `3` replicas each. Populate your replica sets by the `user` collection using the `test` parameter to the sharep-mongo script.
+
+In this question, you will need to get information about the status of your replication sets (e.g. ports of master and slave servers, which servers are up and which down). Unhappily, the `sharep-mongo` script does not offer you this option. So you will need to do it manually. To get information about the status of a replica set, connect to the mongo shell of any of the replica servers, switch to the database of interest, and type `rs.status()`.
+
+```
+$ sharep-mongo init
+$ sharep-mongo test
+$ sharep-mongo status
+  MongoDB shell version: 2.6.7
+  connecting to: 127.0.0.1:27017/test
+  --- Sharding Status ---
+    sharding version: {
+  	"_id" : 1,
+  	"version" : 4,
+  	"minCompatibleVersion" : 4,
+  	"currentVersion" : 5,
+  	"clusterId" : ObjectId("59269f4544d72826f9a53a9f")
+  }
+    shards:
+  	{  "_id" : "rs0",  "host" : "rs0/127.0.0.1:27020,127.0.0.1:27021,127.0.0.1:27022" }
+  	{  "_id" : "rs1",  "host" : "rs1/127.0.0.1:27023,127.0.0.1:27024,127.0.0.1:27025" }
+    databases:
+  	{  "_id" : "admin",  "partitioned" : false,  "primary" : "config" }
+  	{  "_id" : "mydb",  "partitioned" : true,  "primary" : "rs0" }
+  		mydb.user
+  			shard key: { "user_id" : 1 }
+  			chunks:
+  				rs0	8
+  				rs1	4
+  			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : rs0 Timestamp(4, 1)
+  			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : rs0 Timestamp(1, 3)
+  			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : rs1 Timestamp(3, 1)
+  			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : rs0 Timestamp(3, 2)
+  			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : rs0 Timestamp(3, 4)
+  			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : rs0 Timestamp(3, 6)
+  			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : rs0 Timestamp(3, 8)
+  			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : rs0 Timestamp(3, 10)
+  			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : rs0 Timestamp(3, 12)
+  			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : rs1 Timestamp(4, 2)
+  			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : rs1 Timestamp(4, 4)
+  			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : rs1 Timestamp(4, 5)
+```
 

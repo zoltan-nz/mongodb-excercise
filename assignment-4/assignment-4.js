@@ -29,6 +29,14 @@ var q2 = db.reserves.aggregate([
       address: { $first: '$reserves.sailor.address' },
       no_of_reserves: { $sum: 1 }
     }
+  }, {
+    $project: {
+      _id: 0,
+      sailorId: '$_id',
+      name: 1,
+      address: 1,
+      no_of_reserves: 1
+    }
   },
   { $sort: { no_of_reserves: -1 } },
   { $limit: 1 }
@@ -40,7 +48,7 @@ print();
 print('*** QUESTION 3 ***');
 print();
 var q3 = db.reserves.aggregate([
-  { $match: { 'reserves.date': { $exists: true } } },
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
   { $group: { _id: null, total_reserves: { $sum: 1 } } },
   { $project: { _id: false, total_reserves: true } }
 ]);
@@ -95,7 +103,8 @@ var q5detailed = db.reserves.aggregate([
   },
   {
     $project: {
-      _id: true,
+      _id: false,
+      boat_number: '$_id',
       name: true,
       driven_by: true,
       sailor_can_drive: { $setIsSubset: ['$driven_by', sailorSkills] }
@@ -125,7 +134,7 @@ var q5onlyBoatNames = db.reserves.aggregate([
   { $unwind: '$boats' },
   { $match: { boats: { $type: 2 } } },
   { $group: { _id: null, boatNames: { $addToSet: '$boats' } } },
-  { $project: { _id: false, boatNames: true }}
+  { $project: { _id: false, boatNames: true } }
 
 ]);
 print('List of boat names:');
