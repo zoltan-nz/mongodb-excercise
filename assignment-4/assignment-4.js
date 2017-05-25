@@ -21,7 +21,7 @@ print();
 print('*** QUESTION 2 ***');
 print();
 var q2 = db.reserves.aggregate([
-  { $match: { 'reserves.sailor.sailorId': { $exists: true } } },
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
   {
     $group: {
       _id: '$reserves.sailor.sailorId',

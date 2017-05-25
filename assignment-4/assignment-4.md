@@ -82,9 +82,11 @@ Find the `sailor` who made the *maximum number* of reservations. In your answer,
 
 **Answer:**
 
+Assuming a reservation is valid if it has a valid `reserves.date` and a `sailor`.
+
 ```js
 > db.reserves.aggregate([
-  { $match: { 'reserves.sailor.sailorId': { $exists: true } } },
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
   {
     $group: {
       _id: '$reserves.sailor.sailorId',
@@ -115,7 +117,7 @@ Find the total number of `reserves` made by `sailors`. In your answer, the outpu
 
 **Answer:**
 
-Assuming a reservation is valid if it has a valid `reserves.date` and a `sailor`. (However, we don't have any document in our sample dataset which has date without sailor, so we can less strict in our later tasks. But keeping this assumption here help to show the usage of `$and` in our aggregation.)
+Assuming a reservation is valid if it has a valid `reserves.date` and a `sailor`. (However, we don't have any document in our sample data set which has date without sailor, so we can less strict in our later tasks. But keeping this assumption here help to show the usage of `$and` in our aggregation.)
 
 ```js
 > db.reserves.aggregate([
@@ -266,7 +268,72 @@ The following script generates a simple array with suitable boat names for a spe
 ```
 
 Bonus:
-Use aggregate() method and JavaScripts to find sailors who made more than average reserves. You will get 15 bonus marks if you get a correct result, but do not insert manually constants into aggregate() method stages to answer the question.
+Use aggregate() method and JavaScripts to find `sailors` who made more than `average reserves`. You will get 15 bonus marks if you get a correct result, but do not insert manually constants into `aggregate()` method stages to answer the question.
+
+**Answer:**
+
+Assuming the "constants" means a number and not a JavaScript variable which is calculated in a previous step. If a calculated JavaScript variable allowed, the following could be a solution. (Please find it in the attached `bonus.js` file.)
+
+I use the combination of our scripts from previous questions.
+
+```js
+
+var averageCursor = db.reserves.aggregate([
+  {
+    $group: {
+      _id: null,
+      each_reserves_date: { $push: '$reserves.date' },
+      unique_sailor_ids: { $addToSet: '$reserves.sailor.sailorId' },
+      counter: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      no_of_reserves: { $size: '$each_reserves_date' },
+      no_of_sailors: { $size: '$unique_sailor_ids' }
+    }
+  },
+  {
+    $project: {
+      average: { $divide: ['$no_of_reserves', '$no_of_sailors'] }
+    }
+  },
+]);
+
+var average = averageCursor.next().average;
+
+var sailorsAboveAverage = db.reserves.aggregate([
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
+  {
+    $group: {
+      _id: '$reserves.sailor.sailorId',
+      name: { $first: '$reserves.sailor.name' },
+      address: { $first: '$reserves.sailor.address' },
+      no_of_reserves: { $sum: 1 }
+    }
+  }, {
+    $project: {
+      _id: 0,
+      sailorId: '$_id',
+      name: 1,
+      address: 1,
+      no_of_reserves: 1
+    }
+  },
+  { $sort: { no_of_reserves: -1 } },
+  { $match: { no_of_reserves: {$gt: average } }}
+]);
+sailorsAboveAverage.shellPrint();
+
+$ mongo localhost/ass4 ./bonus.js
+MongoDB shell version: 2.6.12
+connecting to: localhost/ass4
+{ "name" : "Milan", "address" : "Wellington", "no_of_reserves" : 6, "sailorId" : 818 }
+{ "name" : "Peter", "address" : "Upper Hutt", "no_of_reserves" : 3, "sailorId" : 111 }
+{ "name" : "James", "address" : "Wellington", "no_of_reserves" : 3, "sailorId" : 707 }
+
+```
 
 ## Part II
 
