@@ -1101,38 +1101,474 @@ In this question, you will need to get information about the status of your repl
 $ sharep-mongo init
 $ sharep-mongo test
 $ sharep-mongo status
-  MongoDB shell version: 2.6.7
-  connecting to: 127.0.0.1:27017/test
-  --- Sharding Status ---
-    sharding version: {
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27017/test
+--- Sharding Status ---
+  sharding version: {
   	"_id" : 1,
   	"version" : 4,
   	"minCompatibleVersion" : 4,
   	"currentVersion" : 5,
-  	"clusterId" : ObjectId("59269f4544d72826f9a53a9f")
+  	"clusterId" : ObjectId("5926a71307269e9ed9d0ec0a")
   }
-    shards:
+  shards:
   	{  "_id" : "rs0",  "host" : "rs0/127.0.0.1:27020,127.0.0.1:27021,127.0.0.1:27022" }
   	{  "_id" : "rs1",  "host" : "rs1/127.0.0.1:27023,127.0.0.1:27024,127.0.0.1:27025" }
-    databases:
+  databases:
   	{  "_id" : "admin",  "partitioned" : false,  "primary" : "config" }
   	{  "_id" : "mydb",  "partitioned" : true,  "primary" : "rs0" }
   		mydb.user
   			shard key: { "user_id" : 1 }
   			chunks:
-  				rs0	8
-  				rs1	4
+  				rs0	5
+  				rs1	6
   			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : rs0 Timestamp(4, 1)
-  			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : rs0 Timestamp(1, 3)
-  			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : rs1 Timestamp(3, 1)
-  			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : rs0 Timestamp(3, 2)
-  			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : rs0 Timestamp(3, 4)
-  			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : rs0 Timestamp(3, 6)
-  			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : rs0 Timestamp(3, 8)
-  			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : rs0 Timestamp(3, 10)
-  			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : rs0 Timestamp(3, 12)
-  			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : rs1 Timestamp(4, 2)
-  			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : rs1 Timestamp(4, 4)
-  			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : rs1 Timestamp(4, 5)
+  			{ "user_id" : 0 } -->> { "user_id" : 4999 } on : rs0 Timestamp(1, 3)
+  			{ "user_id" : 4999 } -->> { "user_id" : 15999 } on : rs1 Timestamp(3, 1)
+  			{ "user_id" : 15999 } -->> { "user_id" : 27999 } on : rs1 Timestamp(2, 4)
+  			{ "user_id" : 27999 } -->> { "user_id" : 39999 } on : rs1 Timestamp(2, 6)
+  			{ "user_id" : 39999 } -->> { "user_id" : 51999 } on : rs1 Timestamp(2, 8)
+  			{ "user_id" : 51999 } -->> { "user_id" : 63999 } on : rs1 Timestamp(2, 10)
+  			{ "user_id" : 63999 } -->> { "user_id" : 74999 } on : rs0 Timestamp(3, 2)
+  			{ "user_id" : 74999 } -->> { "user_id" : 86999 } on : rs0 Timestamp(3, 4)
+  			{ "user_id" : 86999 } -->> { "user_id" : 98999 } on : rs0 Timestamp(3, 6)
+  			{ "user_id" : 98999 } -->> { "user_id" : { "$maxKey" : 1 } } on : rs1 Timestamp(4, 0)
 ```
 
+**a) (2 mark) Find the port number of the master server of the replica set rs0. The port number is the last five digits of the value of the server’s name field.**
+
+See the `rs.status()` result below. Name field: `"name" : "127.0.0.1:27020"`, so the requested port number: `27020`
+
+
+```
+$ sharep-mongo connect 0 0
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27020/test
+rs0:PRIMARY> rs.status()
+  {
+  	"set" : "rs0",
+  	"date" : ISODate("2017-05-25T09:13:07Z"),
+  	"myState" : 1,
+  	"members" : [
+  		{
+  			"_id" : 0,
+  			"name" : "127.0.0.1:27020",
+  			"health" : 1,
+  			"state" : 1,
+  			"stateStr" : "PRIMARY",
+  			"uptime" : 222,
+  			"optime" : Timestamp(1495703523, 723),
+  			"optimeDate" : ISODate("2017-05-25T09:12:03Z"),
+  			"electionTime" : Timestamp(1495703374, 1),
+  			"electionDate" : ISODate("2017-05-25T09:09:34Z"),
+  			"self" : true
+  		},
+  		{
+  			"_id" : 1,
+  			"name" : "127.0.0.1:27021",
+  			"health" : 1,
+  			"state" : 2,
+  			"stateStr" : "SECONDARY",
+  			"uptime" : 221,
+  			"optime" : Timestamp(1495703523, 723),
+  			"optimeDate" : ISODate("2017-05-25T09:12:03Z"),
+  			"lastHeartbeat" : ISODate("2017-05-25T09:13:06Z"),
+  			"lastHeartbeatRecv" : ISODate("2017-05-25T09:13:07Z"),
+  			"pingMs" : 0,
+  			"syncingTo" : "127.0.0.1:27020"
+  		},
+  		{
+  			"_id" : 2,
+  			"name" : "127.0.0.1:27022",
+  			"health" : 1,
+  			"state" : 2,
+  			"stateStr" : "SECONDARY",
+  			"uptime" : 221,
+  			"optime" : Timestamp(1495703523, 723),
+  			"optimeDate" : ISODate("2017-05-25T09:12:03Z"),
+  			"lastHeartbeat" : ISODate("2017-05-25T09:13:06Z"),
+  			"lastHeartbeatRecv" : ISODate("2017-05-25T09:13:07Z"),
+  			"pingMs" : 0,
+  			"syncingTo" : "127.0.0.1:27020"
+  		}
+  	],
+  	"ok" : 1
+  }
+```
+
+**b) (2 mark) Connect to the master server of the replica set `rs0`.**
+
+```
+$ sharep-mongo connect 0 0
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27020/test
+rs0:PRIMARY>
+```
+i. Retrieve the document having `user_id: 1` from the `mydb.user` collection. (1 mark)
+
+```
+rs0:PRIMARY> use mydb
+switched to db mydb
+rs0:PRIMARY> db.user.find({user_id: 1})
+{ "_id" : ObjectId("5926a74884b79f6769eef781"), "user_id" : 1, "name" : "Matt", "number" : 1556 }
+```
+
+ii. Insert the document `{"user_id": 100000, "name": "Steve", "number": 0}` into the `mydb.user` collection. (1 mark)
+
+```
+rs0:PRIMARY> db.user.insert({"user_id": 100000, "name": "Steve", "number": 0})
+WriteResult({ "nInserted" : 1 })
+```
+
+**c) (2 mark) Connect to a slave server of the replica set `rs0`.**
+
+```
+$ sharep-mongo connect 0 1
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27021/test
+```
+
+i. Retrieve the document having `user_id: 1` from the `mydb.user` collection. (1 mark)
+
+```
+rs0:SECONDARY> use mydb
+switched to db mydb
+rs0:SECONDARY> db.user.find({user_id: 1})
+error: { "$err" : "not master and slaveOk=false", "code" : 13435 }
+```
+
+ii. Insert the document `{"user_id": 100001, "name": "Steve", "number": 1}` into the `mydb.user` collection. (1 mark)
+
+```
+rs0:SECONDARY> db.user.insert({"user_id": 100001, "name": "Steve", "number": 1})
+WriteResult({ "writeError" : { "code" : undefined, "errmsg" : "not master" } })
+```
+
+**d) (2 mark) Stop the master server of the replica set rs0.**
+
+```
+$ sharep-mongo stop 0 0
+Stopping mongod --port 27020 sharep-rs0-0
+```
+
+i. View the status of the replica set rs0 and describe it briefly. (1 mark)
+
+```
+$ sharep-mongo connect 0 0
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27020/test
+2017-05-25T21:54:58.345+1200 warning: Failed to connect to 127.0.0.1:27020, reason: errno:111 Connection refused
+2017-05-25T21:54:58.345+1200 Error: couldn't connect to server 127.0.0.1:27020 (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
+exception: connect failed
+
+$ sharep-mongo connect 0 1
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27021/test
+rs0:SECONDARY> rs.status()
+{
+	"set" : "rs0",
+	"date" : ISODate("2017-05-25T09:56:38Z"),
+	"myState" : 2,
+	"syncingTo" : "127.0.0.1:27022",
+	"members" : [
+		{
+			"_id" : 0,
+			"name" : "127.0.0.1:27020",
+			"health" : 0,
+			"state" : 8,
+			"stateStr" : "(not reachable/healthy)",
+			"uptime" : 0,
+			"optime" : Timestamp(1495705552, 1),
+			"optimeDate" : ISODate("2017-05-25T09:45:52Z"),
+			"lastHeartbeat" : ISODate("2017-05-25T09:56:37Z"),
+			"lastHeartbeatRecv" : ISODate("2017-05-25T09:53:26Z"),
+			"pingMs" : 0
+		},
+		{
+			"_id" : 1,
+			"name" : "127.0.0.1:27021",
+			"health" : 1,
+			"state" : 2,
+			"stateStr" : "SECONDARY",
+			"uptime" : 835,
+			"optime" : Timestamp(1495705552, 1),
+			"optimeDate" : ISODate("2017-05-25T09:45:52Z"),
+			"self" : true
+		},
+		{
+			"_id" : 2,
+			"name" : "127.0.0.1:27022",
+			"health" : 1,
+			"state" : 1,
+			"stateStr" : "PRIMARY",
+			"uptime" : 832,
+			"optime" : Timestamp(1495705552, 1),
+			"optimeDate" : ISODate("2017-05-25T09:45:52Z"),
+			"lastHeartbeat" : ISODate("2017-05-25T09:56:36Z"),
+			"lastHeartbeatRecv" : ISODate("2017-05-25T09:56:36Z"),
+			"pingMs" : 0,
+			"electionTime" : Timestamp(1495706011, 1),
+			"electionDate" : ISODate("2017-05-25T09:53:31Z")
+		}
+	],
+	"ok" : 1
+}
+
+```
+
+Our previous master (PRIMARY) is down. We can see the status of this replica set if we connect to an other server on this shard. Clearly, our server on port `27022` became the master (PRIMARY). Server on port `27020` is `not reachable/healthy`. Our server on port `27021` is still our slave (SECONDARY).
+
+We can see details about heartbeats and information about `electionTime` and `electionDate`. Our server `27022` was elected because it was probably faster than the other secondary server.
+
+Interesting to see, that the last heartbeat from our dead server received at `"lastHeartbeatRecv" : ISODate("2017-05-25T09:53:26Z"),` and our new master was elected at `"electionDate" : ISODate("2017-05-25T09:53:31Z")`. `09:53:26` vs `09:53:31`. There was only `5` seconds long interval without master.
+
+Please note, we still have this option here: `"syncingTo" : "127.0.0.1:27022",`, this option won't be there when we will stop an other server.
+
+ii. Connect to the `mongos` shell. Retrieve the document with `user_id: 1` from the `mydb.user` collection. Insert the document `{"user_id": 100001, "name": "Steve", "number": 1}` into the mydb.user collection. (1 mark)
+
+```
+$ sharep-mongo connect
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27017/test
+mongos> show dbs
+admin   (empty)
+config  0.016GB
+mydb    0.063GB
+mongos> use mydb
+switched to db mydb
+mongos> show collections
+system.indexes
+user
+mongos> db.user.find({user_id:1})
+{ "_id" : ObjectId("5926a74884b79f6769eef781"), "user_id" : 1, "name" : "Matt", "number" : 1556 }
+mongos> db.user.insert({"user_id": 100001, "name": "Steve", "number": 1})
+WriteResult({ "nInserted" : 1 })
+```
+
+Little experiment with `.explain()`:
+
+```
+mongos> db.user.find({user_id: 1}).explain()
+{
+	"clusteredType" : "ParallelSort",
+	"shards" : {
+		"rs0/127.0.0.1:27020,127.0.0.1:27021,127.0.0.1:27022" : [
+			{
+				"cursor" : "BtreeCursor user_id_1",
+				"isMultiKey" : false,
+				"n" : 1,
+				"nscannedObjects" : 1,
+				"nscanned" : 1,
+				"nscannedObjectsAllPlans" : 1,
+				"nscannedAllPlans" : 1,
+				"scanAndOrder" : false,
+				"indexOnly" : false,
+				"nYields" : 0,
+				"nChunkSkips" : 0,
+				"millis" : 0,
+				"indexBounds" : {
+					"user_id" : [
+						[
+							1,
+							1
+						]
+					]
+				},
+				"server" : "regent.ecs.vuw.ac.nz:27022",
+				"filterSet" : false
+			}
+		]
+	},
+	"cursor" : "BtreeCursor user_id_1",
+	"n" : 1,
+	"nChunkSkips" : 0,
+	"nYields" : 0,
+	"nscanned" : 1,
+	"nscannedAllPlans" : 1,
+	"nscannedObjects" : 1,
+	"nscannedObjectsAllPlans" : 1,
+	"millisShardTotal" : 0,
+	"millisShardAvg" : 0,
+	"numQueries" : 1,
+	"numShards" : 1,
+	"indexBounds" : {
+		"user_id" : [
+			[
+				1,
+				1
+			]
+		]
+	},
+	"millis" : 0
+}
+
+mongos> db.user.find({user_id: 100001}).explain()
+{
+	"clusteredType" : "ParallelSort",
+	"shards" : {
+		"rs1/127.0.0.1:27023,127.0.0.1:27024,127.0.0.1:27025" : [
+			{
+				"cursor" : "BtreeCursor user_id_1",
+				"isMultiKey" : false,
+				"n" : 1,
+				"nscannedObjects" : 1,
+				"nscanned" : 1,
+				"nscannedObjectsAllPlans" : 1,
+				"nscannedAllPlans" : 1,
+				"scanAndOrder" : false,
+				"indexOnly" : false,
+				"nYields" : 0,
+				"nChunkSkips" : 0,
+				"millis" : 0,
+				"indexBounds" : {
+					"user_id" : [
+						[
+							100001,
+							100001
+						]
+					]
+				},
+				"server" : "regent.ecs.vuw.ac.nz:27023",
+				"filterSet" : false
+			}
+		]
+	},
+	"cursor" : "BtreeCursor user_id_1",
+	"n" : 1,
+	"nChunkSkips" : 0,
+	"nYields" : 0,
+	"nscanned" : 1,
+	"nscannedAllPlans" : 1,
+	"nscannedObjects" : 1,
+	"nscannedObjectsAllPlans" : 1,
+	"millisShardTotal" : 0,
+	"millisShardAvg" : 0,
+	"numQueries" : 1,
+	"numShards" : 1,
+	"indexBounds" : {
+		"user_id" : [
+			[
+				100001,
+				100001
+			]
+		]
+	},
+	"millis" : 0
+}
+```
+
+The first document request (id:1) retrieved from the `rs0` new master server (`27022`). The second request (id:100001) retrieved from `rs1` master (`27023`).
+
+**e) (2 mark) Stop the remaining slave server of the replica set rs0.**
+
+```
+$ sharep-mongo stop 0 1
+Stopping mongod --port 27021 sharep-rs0-1
+```
+
+i. View the status of the replica set rs0 and describe it briefly. (1 mark)
+
+```
+sharep-mongo connect 0 0
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27020/test
+2017-05-25T22:10:09.473+1200 warning: Failed to connect to 127.0.0.1:27020, reason: errno:111 Connection refused
+2017-05-25T22:10:09.473+1200 Error: couldn't connect to server 127.0.0.1:27020 (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
+exception: connect failed
+
+$ sharep-mongo connect 0 1
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27021/test
+2017-05-25T22:10:12.763+1200 warning: Failed to connect to 127.0.0.1:27021, reason: errno:111 Connection refused
+2017-05-25T22:10:12.763+1200 Error: couldn't connect to server 127.0.0.1:27021 (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
+exception: connect failed
+
+$ sharep-mongo connect 0 2
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27022/test
+rs0:SECONDARY> rs.status()
+{
+	"set" : "rs0",
+	"date" : ISODate("2017-05-25T10:10:22Z"),
+	"myState" : 2,
+	"members" : [
+		{
+			"_id" : 0,
+			"name" : "127.0.0.1:27020",
+			"health" : 0,
+			"state" : 8,
+			"stateStr" : "(not reachable/healthy)",
+			"uptime" : 0,
+			"optime" : Timestamp(1495705552, 1),
+			"optimeDate" : ISODate("2017-05-25T09:45:52Z"),
+			"lastHeartbeat" : ISODate("2017-05-25T10:10:21Z"),
+			"lastHeartbeatRecv" : ISODate("2017-05-25T09:53:26Z"),
+			"pingMs" : 0
+		},
+		{
+			"_id" : 1,
+			"name" : "127.0.0.1:27021",
+			"health" : 0,
+			"state" : 8,
+			"stateStr" : "(not reachable/healthy)",
+			"uptime" : 0,
+			"optime" : Timestamp(1495705552, 1),
+			"optimeDate" : ISODate("2017-05-25T09:45:52Z"),
+			"lastHeartbeat" : ISODate("2017-05-25T10:10:21Z"),
+			"lastHeartbeatRecv" : ISODate("2017-05-25T10:09:12Z"),
+			"pingMs" : 0,
+			"syncingTo" : "127.0.0.1:27022"
+		},
+		{
+			"_id" : 2,
+			"name" : "127.0.0.1:27022",
+			"health" : 1,
+			"state" : 2,
+			"stateStr" : "SECONDARY",
+			"uptime" : 1659,
+			"optime" : Timestamp(1495705552, 1),
+			"optimeDate" : ISODate("2017-05-25T09:45:52Z"),
+			"self" : true
+		}
+	],
+	"ok" : 1
+}
+```
+
+We can see from the status, `27020` and `27021` are down, so we lost our previous slave server on this shard. `27022` was our master server a moment ago, but it became now a slave (SECONDARY) server again. We don't have master server anymore on this replica set. We can clearly see here what we learned: "In a three members replica set, if two members are unavailable, the remaining one remains, or becomes the secondary disregarding what role it had before."
+
+We can see details about heartbeats also, what time was it sent and received from servers.
+
+Please note, we don't have `"syncingTo"` field in our status.
+
+ii. Connect to the `mongos` shell. Retrieve the document with `user_id: 1` from the `mydb.user` collection. (1 mark)
+
+```
+$ sharep-mongo connect
+MongoDB shell version: 2.6.7
+connecting to: 127.0.0.1:27017/test
+mongos> use mydb
+switched to db mydb
+mongos> db.user.find({user_id: 1})
+error: {
+	"$err" : "ReplicaSetMonitor no master found for set: rs0",
+	"code" : 10009,
+	"shard" : "rs0"
+}
+```
+
+Now, we can see again in the error message, no master left in `rs0`. It also means, that if read from slave not allowed, than our replica set follows `Strict Consistency`. (If clients are allowed to read from secondaries, the replica set provides an eventual consistency.)
+
+**f) (6 marks) Briefly describe what you have learned by doing subquestions b), c), d), and e) of question 7.**
+
+*Please read my comments in b), c), d) and e) above*
+
+Summary:
+
+* We started our experiment with 2 replica sets. We had one master (`270201`) and two slaves (`27021`, `27022`) in our first replica set (`rs0`).
+* When we connected to our master server (in task `b`), it was able to read and write data. (Master server accepts all write request from clients, updates its data set and records update operations in its operation log.)
+* When we connected to our slave server (in task `c`), it was not able to read or write any data, because a slave server can receive operations from the primary oplog only and apply them on their data sets.
+* When we stopped our master server an "election" happened and we had a new master in our `rs0` replica set. (Please read my comments in question `d` and `c`.)
+* Because we had a new master server, we were able to read and write data, when we connected to this new master.
+* Our replica set is `Strictly Consistent` because after no master left, we were not able to read or write any data in that replica set. (More details in question `e`.)
+ 
