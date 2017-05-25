@@ -66,13 +66,20 @@ e.g.
   }
 ]);
 
-{ "_id" : 110, "name" : "Paul", "skills" : [ "row", "swim" ], "address" : "Upper Hutt" }
-{ "_id" : 777, "name" : "Alva", "skills" : [ "row", "sail", "motor", "dance" ], "address" : "Masterton" }
-{ "_id" : 919, "name" : "Eileen", "skills" : [ "sail", "motor", "swim" ], "address" : "Lower Hutt" }
-{ "_id" : 111, "name" : "Peter", "skills" : [ "row", "sail", "motor" ], "address" : "Upper Hutt" }
-{ "_id" : 999, "name" : "Charmain", "skills" : [ "row" ], "address" : "Upper Hutt" }
-{ "_id" : 818, "name" : "Milan", "skills" : [ "row", "sail", "motor", "first aid" ], "address" : "Wellington" }
-{ "_id" : 707, "name" : "James", "skills" : [ "row", "sail", "motor", "fish" ], "address" : "Wellington" }
+{ "_id" : 110, "name" : "Paul", "skills" : [ "row", "swim" ], "address" : 
+  "Upper Hutt" }
+{ "_id" : 777, "name" : "Alva", "skills" : [ "row", "sail", "motor", "dance" ], 
+  "address" : "Masterton" }
+{ "_id" : 919, "name" : "Eileen", "skills" : [ "sail", "motor", "swim" ], 
+  "address" : "Lower Hutt" }
+{ "_id" : 111, "name" : "Peter", "skills" : [ "row", "sail", "motor" ], 
+  "address" : "Upper Hutt" }
+{ "_id" : 999, "name" : "Charmain", "skills" : [ "row" ], "address" : 
+  "Upper Hutt" }
+{ "_id" : 818, "name" : "Milan", "skills" : [ "row", "sail", "motor", 
+  "first aid" ], "address" : "Wellington" }
+{ "_id" : 707, "name" : "James", "skills" : [ "row", "sail", "motor", "fish" ], 
+  "address" : "Wellington" }
 ```
 
 ### Question 2
@@ -86,7 +93,8 @@ Assuming a reservation is valid if it has a valid `reserves.date` and a `sailor`
 
 ```js
 > db.reserves.aggregate([
-  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, 
+    { 'reserves.sailor': { $exists: true } }] } },
   {
     $group: {
       _id: '$reserves.sailor.sailorId',
@@ -107,7 +115,8 @@ Assuming a reservation is valid if it has a valid `reserves.date` and a `sailor`
   { $limit: 1 }
 ]);
 
-{ "name" : "Milan", "address" : "Wellington", "no_of_reserves" : 6, "sailorId" : 818 }
+{ "name" : "Milan", "address" : "Wellington", "no_of_reserves" : 6, 
+  "sailorId" : 818 }
 ```
 
 ### Question 3
@@ -121,7 +130,8 @@ Assuming a reservation is valid if it has a valid `reserves.date` and a `sailor`
 
 ```js
 > db.reserves.aggregate([
-  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, 
+      { 'reserves.sailor': { $exists: true } }] } },
   { $group: { _id: null, total_reserves: { $sum: 1 } } },
   { $project: { _id: false, total_reserves: true } }
 ]);
@@ -145,8 +155,10 @@ If we filter our database for `reserves.date`, we will miss one of the sailor wh
 ```js
 db.reserves.aggregate([
   { $match: { 'reserves.date': { $exists: true } } },
-  { $group: { _id: '$reserves.sailor.sailorId', no_of_reserves_by_sailor: { $sum: 1 } } },
-  { $group: { _id: null, average_number_of_reserves_by_all_sailors: { $avg: '$no_of_reserves_by_sailor' } } },
+  { $group: { _id: '$reserves.sailor.sailorId', 
+      no_of_reserves_by_sailor: { $sum: 1 } } },
+  { $group: { _id: null, average_number_of_reserves_by_all_sailors: 
+      { $avg: '$no_of_reserves_by_sailor' } } },
   { $project: { _id: false, average_number_of_reserves_by_all_sailors: true } }
 ]);
 
@@ -182,7 +194,8 @@ In the third step we calculate the average number with `$divide`:
   },
   {
     $project: {
-      average_number_of_reserves_by_all_sailors: { $divide: ['$no_of_reserves', '$no_of_sailors'] }
+      average_number_of_reserves_by_all_sailors: 
+        { $divide: ['$no_of_reserves', '$no_of_sailors'] }
     }
   },
 ]);
@@ -201,7 +214,8 @@ The following script prints out a detailed list about boats and driver. (This is
 
 ```js
 > var sailorName = 'Paul';
-> var sailorSkills = db.reserves.distinct('reserves.sailor.skills', { 'reserves.sailor.name': sailorName });
+> var sailorSkills = db.reserves.distinct('reserves.sailor.skills', 
+    { 'reserves.sailor.name': sailorName });
 > print('Sailor: ' + sailorName);
 Sailor: Paul
 > print('Skills: ' + sailorSkills);
@@ -227,16 +241,26 @@ Skills: row,swim
   }
 ]);> q5detailed.shellPrint();
 
-{ "name" : "Penguin", "driven_by" : [ "row" ], "boat_number" : 131, "sailor_can_drive" : true }
-{ "name" : "Night Breeze", "driven_by" : [ "row" ], "boat_number" : 818, "sailor_can_drive" : true }
-{ "name" : "Mermaid", "driven_by" : [ "sail", "motor" ], "boat_number" : 919, "sailor_can_drive" : false }
-{ "name" : "Sea Gull", "driven_by" : [ "row" ], "boat_number" : 137, "sailor_can_drive" : true }
-{ "name" : "Tarakihi", "driven_by" : [ "row", "motor" ], "boat_number" : 717, "sailor_can_drive" : false }
-{ "name" : "Red Cod", "driven_by" : [ "sail", "motor" ], "boat_number" : 616, "sailor_can_drive" : false }
-{ "name" : "Dolphin", "driven_by" : [ "sail", "motor" ], "boat_number" : 110, "sailor_can_drive" : false }
-{ "name" : "Blue Shark", "driven_by" : [ "motor" ], "boat_number" : 515, "sailor_can_drive" : false }
-{ "name" : "Killer Whale", "driven_by" : [ "row" ], "boat_number" : 111, "sailor_can_drive" : true }
-{ "name" : "Flying Dutch", "driven_by" : [ "sail" ], "boat_number" : 313, "sailor_can_drive" : false }
+{ "name" : "Penguin", "driven_by" : [ "row" ], "boat_number" : 131, 
+  "sailor_can_drive" : true }
+{ "name" : "Night Breeze", "driven_by" : [ "row" ], "boat_number" : 818, 
+  "sailor_can_drive" : true }
+{ "name" : "Mermaid", "driven_by" : [ "sail", "motor" ], "boat_number" : 919, 
+  "sailor_can_drive" : false }
+{ "name" : "Sea Gull", "driven_by" : [ "row" ], "boat_number" : 137, 
+  "sailor_can_drive" : true }
+{ "name" : "Tarakihi", "driven_by" : [ "row", "motor" ], "boat_number" : 717, 
+  "sailor_can_drive" : false }
+{ "name" : "Red Cod", "driven_by" : [ "sail", "motor" ], "boat_number" : 616, 
+  "sailor_can_drive" : false }
+{ "name" : "Dolphin", "driven_by" : [ "sail", "motor" ], "boat_number" : 110, 
+  "sailor_can_drive" : false }
+{ "name" : "Blue Shark", "driven_by" : [ "motor" ], "boat_number" : 515, 
+  "sailor_can_drive" : false }
+{ "name" : "Killer Whale", "driven_by" : [ "row" ], "boat_number" : 111, 
+  "sailor_can_drive" : true }
+{ "name" : "Flying Dutch", "driven_by" : [ "sail" ], "boat_number" : 313, 
+  "sailor_can_drive" : false }
 ```
 
 The following script generates a simple array with suitable boat names for a specified sailor. We use our `sailorSkills` variable from above:
@@ -254,7 +278,8 @@ The following script generates a simple array with suitable boat names for a spe
   {
     $group: {
       _id: null,
-      boats: { $addToSet: { $cond: [{ $setIsSubset: ['$driven_by', sailorSkills] }, '$name', 0] } }
+      boats: { $addToSet: { $cond: [{ $setIsSubset: ['$driven_by', 
+        sailorSkills] }, '$name', 0] } }
     }
   },
   { $unwind: '$boats' },
@@ -304,7 +329,8 @@ var averageCursor = db.reserves.aggregate([
 var average = averageCursor.next().average;
 
 var sailorsAboveAverage = db.reserves.aggregate([
-  { $match: { $and: [{ 'reserves.date': { $exists: true } }, { 'reserves.sailor': { $exists: true } }] } },
+  { $match: { $and: [{ 'reserves.date': { $exists: true } }, 
+      { 'reserves.sailor': { $exists: true } }] } },
   {
     $group: {
       _id: '$reserves.sailor.sailorId',
@@ -329,9 +355,12 @@ sailorsAboveAverage.shellPrint();
 $ mongo localhost/ass4 ./bonus.js
 MongoDB shell version: 2.6.12
 connecting to: localhost/ass4
-{ "name" : "Milan", "address" : "Wellington", "no_of_reserves" : 6, "sailorId" : 818 }
-{ "name" : "Peter", "address" : "Upper Hutt", "no_of_reserves" : 3, "sailorId" : 111 }
-{ "name" : "James", "address" : "Wellington", "no_of_reserves" : 3, "sailorId" : 707 }
+{ "name" : "Milan", "address" : "Wellington", "no_of_reserves" : 6, 
+  "sailorId" : 818 }
+{ "name" : "Peter", "address" : "Upper Hutt", "no_of_reserves" : 3, 
+  "sailorId" : 111 }
+{ "name" : "James", "address" : "Wellington", "no_of_reserves" : 3, 
+  "sailorId" : 707 }
 
 ```
 
@@ -480,12 +509,18 @@ mongos> sh.status()
 				shard0001	1
 				shard0002	1
 				shard0003	1
-			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 38339 } on : shard0000 Timestamp(2, 0)
-			{ "user_id" : 38339 } -->> { "user_id" : 40680 } on : shard0004 Timestamp(6, 0)
-			{ "user_id" : 40680 } -->> { "user_id" : 70999 } on : shard0005 Timestamp(6, 1)
-			{ "user_id" : 70999 } -->> { "user_id" : 80999 } on : shard0001 Timestamp(4, 1)
-			{ "user_id" : 80999 } -->> { "user_id" : 90999 } on : shard0002 Timestamp(5, 1)
-			{ "user_id" : 90999 } -->> { "user_id" : { "$maxKey" : 1 } } on : shard0003 Timestamp(5, 0)
+			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 38339 } on : 
+			    shard0000 Timestamp(2, 0)
+			{ "user_id" : 38339 } -->> { "user_id" : 40680 } on : shard0004 
+			    Timestamp(6, 0)
+			{ "user_id" : 40680 } -->> { "user_id" : 70999 } on : shard0005 
+			    Timestamp(6, 1)
+			{ "user_id" : 70999 } -->> { "user_id" : 80999 } on : shard0001 
+			    Timestamp(4, 1)
+			{ "user_id" : 80999 } -->> { "user_id" : 90999 } on : shard0002 
+			    Timestamp(5, 1)
+			{ "user_id" : 90999 } -->> { "user_id" : { "$maxKey" : 1 } } on 
+			    : shard0003 Timestamp(5, 0)
 ```
 
 We can see here:
@@ -521,18 +556,30 @@ mongos> sh.status()
 			chunks:
 				shard0001	6
 				shard0000	6
-			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : shard0001 Timestamp(12, 0)
-			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 Timestamp(12, 1)
-			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 Timestamp(11, 1)
-			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0000 Timestamp(3, 2)
-			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0001 Timestamp(4, 2)
-			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0000 Timestamp(5, 2)
-			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0001 Timestamp(6, 2)
-			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0000 Timestamp(7, 2)
-			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0001 Timestamp(8, 2)
-			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0000 Timestamp(9, 2)
-			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0001 Timestamp(10, 2)
-			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : shard0000 Timestamp(11, 0)
+			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : 
+			    shard0001 Timestamp(12, 0)
+			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 
+			    Timestamp(12, 1)
+			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 
+			    Timestamp(11, 1)
+			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0000 
+			    Timestamp(3, 2)
+			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0001 
+			    Timestamp(4, 2)
+			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0000 
+			    Timestamp(5, 2)
+			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0001 
+			    Timestamp(6, 2)
+			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0000 
+			    Timestamp(7, 2)
+			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0001 
+			    Timestamp(8, 2)
+			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0000 
+			    Timestamp(9, 2)
+			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0001 
+			    Timestamp(10, 2)
+			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : 
+			    shard0000 Timestamp(11, 0)
 ```
 
 In case of 5: Each shard has `2` chunks. (See below.)
@@ -564,16 +611,26 @@ mongos> sh.status()
 				shard0001	2
 				shard0003	2
 				shard0004	2
-			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : shard0002 Timestamp(9, 1)
-			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 Timestamp(7, 1)
-			{ "user_id" : 5999 } -->> { "user_id" : 34999 } on : shard0001 Timestamp(8, 1)
-			{ "user_id" : 34999 } -->> { "user_id" : 44999 } on : shard0003 Timestamp(10, 1)
-			{ "user_id" : 44999 } -->> { "user_id" : 54999 } on : shard0004 Timestamp(6, 1)
-			{ "user_id" : 54999 } -->> { "user_id" : 64999 } on : shard0000 Timestamp(6, 2)
-			{ "user_id" : 64999 } -->> { "user_id" : 74999 } on : shard0001 Timestamp(7, 2)
-			{ "user_id" : 74999 } -->> { "user_id" : 84999 } on : shard0002 Timestamp(8, 2)
-			{ "user_id" : 84999 } -->> { "user_id" : 94999 } on : shard0003 Timestamp(9, 2)
-			{ "user_id" : 94999 } -->> { "user_id" : { "$maxKey" : 1 } } on : shard0004 Timestamp(10, 0)
+			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : 
+			    shard0002 Timestamp(9, 1)
+			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 
+			    Timestamp(7, 1)
+			{ "user_id" : 5999 } -->> { "user_id" : 34999 } on : shard0001 
+			    Timestamp(8, 1)
+			{ "user_id" : 34999 } -->> { "user_id" : 44999 } on : shard0003 
+			    Timestamp(10, 1)
+			{ "user_id" : 44999 } -->> { "user_id" : 54999 } on : shard0004 
+			    Timestamp(6, 1)
+			{ "user_id" : 54999 } -->> { "user_id" : 64999 } on : shard0000 
+			    Timestamp(6, 2)
+			{ "user_id" : 64999 } -->> { "user_id" : 74999 } on : shard0001 
+			    Timestamp(7, 2)
+			{ "user_id" : 74999 } -->> { "user_id" : 84999 } on : shard0002 
+			    Timestamp(8, 2)
+			{ "user_id" : 84999 } -->> { "user_id" : 94999 } on : shard0003 
+			    Timestamp(9, 2)
+			{ "user_id" : 94999 } -->> { "user_id" : { "$maxKey" : 1 } } on : 
+			    shard0004 Timestamp(10, 0)
 ```
 
 In case of 10: The first two shards have 2 chunks and the rest of them has only 1 chunk. (See below.)
@@ -615,18 +672,30 @@ mongos> sh.status()
 				shard0007	1
 				shard0008	1
 				shard0009	1
-			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : shard0000 Timestamp(2, 1)
-			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 Timestamp(1, 3)
-			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 Timestamp(3, 1)
-			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0002 Timestamp(4, 1)
-			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0003 Timestamp(5, 1)
-			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0004 Timestamp(6, 1)
-			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0005 Timestamp(7, 1)
-			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0006 Timestamp(8, 1)
-			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0007 Timestamp(9, 1)
-			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0008 Timestamp(10, 1)
-			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0009 Timestamp(11, 1)
-			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : shard0001 Timestamp(11, 0)
+			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : 
+			    shard0000 Timestamp(2, 1)
+			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 
+			    Timestamp(1, 3)
+			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 
+			    Timestamp(3, 1)
+			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0002 
+			    Timestamp(4, 1)
+			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0003 
+			    Timestamp(5, 1)
+			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0004 
+			    Timestamp(6, 1)
+			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0005 
+			    Timestamp(7, 1)
+			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0006 
+			    Timestamp(8, 1)
+			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0007 
+			    Timestamp(9, 1)
+			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0008 
+			    Timestamp(10, 1)
+			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0009 
+			    Timestamp(11, 1)
+			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : 
+			    shard0001 Timestamp(11, 0)
 ```
 
 **2. To which shard belongs the document having user_id: 55555 in the case of: 2, 5, and 10 shards? (2 marks)**
@@ -690,16 +759,26 @@ Shard shard0009 at 127.0.0.1:27029
 
 Totals
  data : 10.68MiB docs : 100000 chunks : 12
- Shard shard0000 contains 5.99% data, 5.99% docs in cluster, avg obj size on shard : 112B
- Shard shard0001 contains 14% data, 14% docs in cluster, avg obj size on shard : 112B
- Shard shard0002 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
- Shard shard0003 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
- Shard shard0004 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
- Shard shard0005 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
- Shard shard0006 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
- Shard shard0007 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
- Shard shard0008 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
- Shard shard0009 contains 10% data, 10% docs in cluster, avg obj size on shard : 112B
+ Shard shard0000 contains 5.99% data, 5.99% docs in cluster, avg obj size 
+    on shard : 112B
+ Shard shard0001 contains 14% data, 14% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0002 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0003 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0004 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0005 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0006 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0007 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0008 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
+ Shard shard0009 contains 10% data, 10% docs in cluster, avg obj size on 
+    shard : 112B
 ```
 
 ```
@@ -796,18 +875,30 @@ connecting to: 127.0.0.1:27017/test
 				shard0002	2
 				shard0003	2
 				shard0004	2
-			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : shard0000 Timestamp(11, 1)
-			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 Timestamp(1, 3)
-			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 Timestamp(7, 1)
-			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0002 Timestamp(8, 1)
-			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0003 Timestamp(9, 1)
-			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0004 Timestamp(10, 1)
-			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0001 Timestamp(6, 2)
-			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0002 Timestamp(7, 2)
-			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0003 Timestamp(8, 2)
-			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0004 Timestamp(9, 2)
-			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0000 Timestamp(10, 2)
-			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : shard0001 Timestamp(11, 0)
+			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : 
+			    shard0000 Timestamp(11, 1)
+			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 
+			    Timestamp(1, 3)
+			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 
+			    Timestamp(7, 1)
+			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0002 
+			    Timestamp(8, 1)
+			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0003 
+			    Timestamp(9, 1)
+			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0004 
+			    Timestamp(10, 1)
+			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0001 
+			    Timestamp(6, 2)
+			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0002 
+			    Timestamp(7, 2)
+			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0003 
+			    Timestamp(8, 2)
+			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0004 
+			    Timestamp(9, 2)
+			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0000 
+			    Timestamp(10, 2)
+			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : 
+			    shard0001 Timestamp(11, 0)
 ```
 
 ```			
@@ -954,18 +1045,30 @@ mongos> sh.status()
 			chunks:
 				shard0001	6
 				shard0000	6
-			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : shard0001 Timestamp(12, 1)
-			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 Timestamp(11, 1)
-			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 Timestamp(5, 1)
-			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0000 Timestamp(3, 2)
-			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0001 Timestamp(4, 2)
-			{ "user_id" : 35999 } -->> { "user_id" : 47999 } on : shard0000 Timestamp(6, 2)
-			{ "user_id" : 47999 } -->> { "user_id" : 57999 } on : shard0001 Timestamp(7, 2)
-			{ "user_id" : 57999 } -->> { "user_id" : 67999 } on : shard0000 Timestamp(8, 2)
-			{ "user_id" : 67999 } -->> { "user_id" : 77999 } on : shard0001 Timestamp(9, 2)
-			{ "user_id" : 77999 } -->> { "user_id" : 87999 } on : shard0000 Timestamp(10, 2)
-			{ "user_id" : 87999 } -->> { "user_id" : 97999 } on : shard0001 Timestamp(11, 2)
-			{ "user_id" : 97999 } -->> { "user_id" : { "$maxKey" : 1 } } on : shard0000 Timestamp(12, 0)
+			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : 
+			    shard0001 Timestamp(12, 1)
+			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 
+			    Timestamp(11, 1)
+			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 
+			    Timestamp(5, 1)
+			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0000 
+			    Timestamp(3, 2)
+			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0001 
+			    Timestamp(4, 2)
+			{ "user_id" : 35999 } -->> { "user_id" : 47999 } on : shard0000 
+			    Timestamp(6, 2)
+			{ "user_id" : 47999 } -->> { "user_id" : 57999 } on : shard0001 
+			    Timestamp(7, 2)
+			{ "user_id" : 57999 } -->> { "user_id" : 67999 } on : shard0000 
+			    Timestamp(8, 2)
+			{ "user_id" : 67999 } -->> { "user_id" : 77999 } on : shard0001 
+			    Timestamp(9, 2)
+			{ "user_id" : 77999 } -->> { "user_id" : 87999 } on : shard0000 
+			    Timestamp(10, 2)
+			{ "user_id" : 87999 } -->> { "user_id" : 97999 } on : shard0001 
+			    Timestamp(11, 2)
+			{ "user_id" : 97999 } -->> { "user_id" : { "$maxKey" : 1 } } on : 
+			    shard0000 Timestamp(12, 0)
 ```
 
 **c) Use the configuration with 10 shards. Connect to the mongo shell of the server storing the shard that contains the user document with user_id: 55555. (2 marks)**
@@ -1009,18 +1112,30 @@ mongos> sh.status()
 				shard0007	1
 				shard0008	1
 				shard0009	1
-			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : shard0000 Timestamp(2, 1)
-			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 Timestamp(1, 3)
-			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 Timestamp(3, 1)
-			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0002 Timestamp(4, 1)
-			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0003 Timestamp(5, 1)
-			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0004 Timestamp(6, 1)
-			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0005 Timestamp(7, 1)
-			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0006 Timestamp(8, 1)
-			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0007 Timestamp(9, 1)
-			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0008 Timestamp(10, 1)
-			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0009 Timestamp(11, 1)
-			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : shard0001 Timestamp(11, 0)
+			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : 
+			    shard0000 Timestamp(2, 1)
+			{ "user_id" : 0 } -->> { "user_id" : 5999 } on : shard0000 
+			    Timestamp(1, 3)
+			{ "user_id" : 5999 } -->> { "user_id" : 15999 } on : shard0001 
+			    Timestamp(3, 1)
+			{ "user_id" : 15999 } -->> { "user_id" : 25999 } on : shard0002 
+			    Timestamp(4, 1)
+			{ "user_id" : 25999 } -->> { "user_id" : 35999 } on : shard0003 
+			    Timestamp(5, 1)
+			{ "user_id" : 35999 } -->> { "user_id" : 45999 } on : shard0004 
+			    Timestamp(6, 1)
+			{ "user_id" : 45999 } -->> { "user_id" : 55999 } on : shard0005 
+			    Timestamp(7, 1)
+			{ "user_id" : 55999 } -->> { "user_id" : 65999 } on : shard0006 
+			    Timestamp(8, 1)
+			{ "user_id" : 65999 } -->> { "user_id" : 75999 } on : shard0007 
+			    Timestamp(9, 1)
+			{ "user_id" : 75999 } -->> { "user_id" : 85999 } on : shard0008 
+			    Timestamp(10, 1)
+			{ "user_id" : 85999 } -->> { "user_id" : 95999 } on : shard0009 
+			    Timestamp(11, 1)
+			{ "user_id" : 95999 } -->> { "user_id" : { "$maxKey" : 1 } } on : 
+			    shard0001 Timestamp(11, 0)
 ```
 
 ```
@@ -1034,7 +1149,8 @@ i. Retrieve the document with user_id: 55555.
 
 ```
 > db.user.find({user_id: 55555})
-{ "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : "Kristina", "number" : 1198 }
+{ "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : 
+    "Kristina", "number" : 1198 }
 ``` 
  
 ii. Retrieve the document with user_id: 1.
@@ -1057,14 +1173,16 @@ i. Retrieve the document with `user_id: 55555`.
 
 ```
 mongos> db.user.find({user_id: 55555})
-{ "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : "Kristina", "number" : 1198 } 
+{ "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : 
+    "Kristina", "number" : 1198 } 
 ```
 
 ii. Retrieve the document with `user_id: 1`.
 
 ```
 mongos> db.user.find({user_id: 1})
-{ "_id" : ObjectId("5925794e2a56d195595c502f"), "user_id" : 1, "name" : "Jeff", "number" : 7993 }
+{ "_id" : ObjectId("5925794e2a56d195595c502f"), "user_id" : 1, "name" : 
+    "Jeff", "number" : 7993 }
 ```
 
 **e) Explain MongoDB behavior in questions c) and d) above. (4 marks)**
@@ -1101,7 +1219,8 @@ ii. Retrieve the document with `user_id: 1`.
 
 ```
 mongos> db.user.find({user_id: 1})
-{ "_id" : ObjectId("5925794e2a56d195595c502f"), "user_id" : 1, "name" : "Jeff", "number" : 7993 }
+{ "_id" : ObjectId("5925794e2a56d195595c502f"), "user_id" : 1, "name" : 
+    "Jeff", "number" : 7993 }
 ```
 
 iii. What percentage (roughly) of your database became unavailable? Will it become available again if you restart the mongod server?
@@ -1121,7 +1240,8 @@ Let's have more experiment with our data:
 
 ```
 mongos> db.user.find({user_id: 45998})
-{ "_id" : ObjectId("592579502a56d195595d03dc"), "user_id" : 45998, "name" : "Bill", "number" : 7914 }
+{ "_id" : ObjectId("592579502a56d195595d03dc"), "user_id" : 45998, "name" : 
+    "Bill", "number" : 7914 }
 mongos> db.user.find({user_id: 45999})
 error: {
 	"$err" : "socket exception [CONNECT_ERROR] for 127.0.0.1:27025",
@@ -1135,7 +1255,8 @@ error: {
 	"shard" : "shard0005"
 }
 mongos> db.user.find({user_id: 55999})
-{ "_id" : ObjectId("592579512a56d195595d2aed"), "user_id" : 55999, "name" : "Katie", "number" : 5064 }
+{ "_id" : ObjectId("592579512a56d195595d2aed"), "user_id" : 55999, "name" : 
+    "Katie", "number" : 5064 }
 ```
 
 ```
@@ -1150,9 +1271,11 @@ connecting to: 127.0.0.1:27017/test
 mongos> use mydb
 switched to db mydb
 mongos> db.user.find({user_id: 55555})
-{ "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : "Kristina", "number" : 1198 }
+{ "_id" : ObjectId("592579512a56d195595d2931"), "user_id" : 55555, "name" : 
+    "Kristina", "number" : 1198 }
 mongos> db.user.find({user_id: 55998})
-{ "_id" : ObjectId("592579512a56d195595d2aec"), "user_id" : 55998, "name" : "Eliot", "number" : 2627 }
+{ "_id" : ObjectId("592579512a56d195595d2aec"), "user_id" : 55998, "name" : 
+    "Eliot", "number" : 2627 }
 ```
 
 Yes, we can retrieve our data again after we restarted the server.
@@ -1179,8 +1302,10 @@ connecting to: 127.0.0.1:27017/test
   	"clusterId" : ObjectId("5926a71307269e9ed9d0ec0a")
   }
   shards:
-  	{  "_id" : "rs0",  "host" : "rs0/127.0.0.1:27020,127.0.0.1:27021,127.0.0.1:27022" }
-  	{  "_id" : "rs1",  "host" : "rs1/127.0.0.1:27023,127.0.0.1:27024,127.0.0.1:27025" }
+  	{  "_id" : "rs0",  "host" : "rs0/127.0.0.1:27020,127.0.0.1:27021,
+  	    127.0.0.1:27022" }
+  	{  "_id" : "rs1",  "host" : "rs1/127.0.0.1:27023,127.0.0.1:27024,
+  	    127.0.0.1:27025" }
   databases:
   	{  "_id" : "admin",  "partitioned" : false,  "primary" : "config" }
   	{  "_id" : "mydb",  "partitioned" : true,  "primary" : "rs0" }
@@ -1189,17 +1314,27 @@ connecting to: 127.0.0.1:27017/test
   			chunks:
   				rs0	5
   				rs1	6
-  			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : rs0 Timestamp(4, 1)
+  			{ "user_id" : { "$minKey" : 1 } } -->> { "user_id" : 0 } on : 
+  			    rs0 Timestamp(4, 1)
   			{ "user_id" : 0 } -->> { "user_id" : 4999 } on : rs0 Timestamp(1, 3)
-  			{ "user_id" : 4999 } -->> { "user_id" : 15999 } on : rs1 Timestamp(3, 1)
-  			{ "user_id" : 15999 } -->> { "user_id" : 27999 } on : rs1 Timestamp(2, 4)
-  			{ "user_id" : 27999 } -->> { "user_id" : 39999 } on : rs1 Timestamp(2, 6)
-  			{ "user_id" : 39999 } -->> { "user_id" : 51999 } on : rs1 Timestamp(2, 8)
-  			{ "user_id" : 51999 } -->> { "user_id" : 63999 } on : rs1 Timestamp(2, 10)
-  			{ "user_id" : 63999 } -->> { "user_id" : 74999 } on : rs0 Timestamp(3, 2)
-  			{ "user_id" : 74999 } -->> { "user_id" : 86999 } on : rs0 Timestamp(3, 4)
-  			{ "user_id" : 86999 } -->> { "user_id" : 98999 } on : rs0 Timestamp(3, 6)
-  			{ "user_id" : 98999 } -->> { "user_id" : { "$maxKey" : 1 } } on : rs1 Timestamp(4, 0)
+  			{ "user_id" : 4999 } -->> { "user_id" : 15999 } on : rs1 
+  			    Timestamp(3, 1)
+  			{ "user_id" : 15999 } -->> { "user_id" : 27999 } on : rs1 
+  			    Timestamp(2, 4)
+  			{ "user_id" : 27999 } -->> { "user_id" : 39999 } on : rs1 
+  			    Timestamp(2, 6)
+  			{ "user_id" : 39999 } -->> { "user_id" : 51999 } on : rs1 
+  			    Timestamp(2, 8)
+  			{ "user_id" : 51999 } -->> { "user_id" : 63999 } on : rs1 
+  			    Timestamp(2, 10)
+  			{ "user_id" : 63999 } -->> { "user_id" : 74999 } on : rs0 
+  			    Timestamp(3, 2)
+  			{ "user_id" : 74999 } -->> { "user_id" : 86999 } on : rs0 
+  			    Timestamp(3, 4)
+  			{ "user_id" : 86999 } -->> { "user_id" : 98999 } on : rs0 
+  			    Timestamp(3, 6)
+  			{ "user_id" : 98999 } -->> { "user_id" : { "$maxKey" : 1 } } on : 
+  			    rs1 Timestamp(4, 0)
 ```
 
 **a) (2 mark) Find the port number of the master server of the replica set rs0. The port number is the last five digits of the value of the server’s name field.**
@@ -1324,8 +1459,10 @@ i. View the status of the replica set rs0 and describe it briefly. (1 mark)
 $ sharep-mongo connect 0 0
 MongoDB shell version: 2.6.7
 connecting to: 127.0.0.1:27020/test
-2017-05-25T21:54:58.345+1200 warning: Failed to connect to 127.0.0.1:27020, reason: errno:111 Connection refused
-2017-05-25T21:54:58.345+1200 Error: couldn't connect to server 127.0.0.1:27020 (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
+2017-05-25T21:54:58.345+1200 warning: Failed to connect to 127.0.0.1:27020, 
+    reason: errno:111 Connection refused
+2017-05-25T21:54:58.345+1200 Error: couldn't connect to server 127.0.0.1:27020 
+    (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
 exception: connect failed
 
 $ sharep-mongo connect 0 1
@@ -1407,7 +1544,8 @@ mongos> show collections
 system.indexes
 user
 mongos> db.user.find({user_id:1})
-{ "_id" : ObjectId("5926a74884b79f6769eef781"), "user_id" : 1, "name" : "Matt", "number" : 1556 }
+{ "_id" : ObjectId("5926a74884b79f6769eef781"), "user_id" : 1, "name" : "Matt", 
+    "number" : 1556 }
 mongos> db.user.insert({"user_id": 100001, "name": "Steve", "number": 1})
 WriteResult({ "nInserted" : 1 })
 ```
@@ -1539,15 +1677,19 @@ i. View the status of the replica set rs0 and describe it briefly. (1 mark)
 sharep-mongo connect 0 0
 MongoDB shell version: 2.6.7
 connecting to: 127.0.0.1:27020/test
-2017-05-25T22:10:09.473+1200 warning: Failed to connect to 127.0.0.1:27020, reason: errno:111 Connection refused
-2017-05-25T22:10:09.473+1200 Error: couldn't connect to server 127.0.0.1:27020 (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
+2017-05-25T22:10:09.473+1200 warning: Failed to connect to 127.0.0.1:27020, 
+    reason: errno:111 Connection refused
+2017-05-25T22:10:09.473+1200 Error: couldn't connect to server 127.0.0.1:27020 
+    (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
 exception: connect failed
 
 $ sharep-mongo connect 0 1
 MongoDB shell version: 2.6.7
 connecting to: 127.0.0.1:27021/test
-2017-05-25T22:10:12.763+1200 warning: Failed to connect to 127.0.0.1:27021, reason: errno:111 Connection refused
-2017-05-25T22:10:12.763+1200 Error: couldn't connect to server 127.0.0.1:27021 (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
+2017-05-25T22:10:12.763+1200 warning: Failed to connect to 127.0.0.1:27021, 
+    reason: errno:111 Connection refused
+2017-05-25T22:10:12.763+1200 Error: couldn't connect to server 127.0.0.1:27021 
+    (127.0.0.1), connection attempt failed at src/mongo/shell/mongo.js:148
 exception: connect failed
 
 $ sharep-mongo connect 0 2
