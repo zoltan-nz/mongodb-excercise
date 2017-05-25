@@ -11,7 +11,8 @@ To answer questions in this part of the assignment, use the collection reserves 
 Importing...
 
 ```
-$ mongoimport --db ass4 --collection reserves --file ./assignment-4/ass4_reserves_17.json
+$ mongoimport --db ass4 --collection reserves 
+	--file ./assignment-4/ass4_reserves_17.json
 Connected to: 127.0.0.1
 check 9 22
 imported 22 objects
@@ -1412,7 +1413,8 @@ i. Retrieve the document having `user_id: 1` from the `mydb.user` collection. (1
 rs0:PRIMARY> use mydb
 switched to db mydb
 rs0:PRIMARY> db.user.find({user_id: 1})
-{ "_id" : ObjectId("5926a74884b79f6769eef781"), "user_id" : 1, "name" : "Matt", "number" : 1556 }
+{ "_id" : ObjectId("5926a74884b79f6769eef781"), "user_id" : 1, 
+	"name" : "Matt", "number" : 1556 }
 ```
 
 ii. Insert the document `{"user_id": 100000, "name": "Steve", "number": 0}` into the `mydb.user` collection. (1 mark)
@@ -1766,18 +1768,18 @@ error: {
 }
 ```
 
-Now, we can see again in the error message, no master left in `rs0`. It also means, that if read from slave not allowed, than our replica set follows `Strict Consistency`. (If clients are allowed to read from secondaries, the replica set provides an eventual consistency.)
+Now, we can see again in the error message, no master left in `rs0`. It also means, that if read from slave not allowed, than our replica set is try to be `Strictly Consistent`. (If clients are allowed to read from secondaries, the replica set provides an `Eventual Consistency`. We can turn on this feature using `rs.slaveOk()` method. Ref: https://docs.mongodb.com/v2.6/reference/method/rs.slaveOk/)
 
 **f) (6 marks) Briefly describe what you have learned by doing subquestions b), c), d), and e) of question 7.**
 
-*Please read my comments in b), c), d) and e) above*
+*Please read my comments in b), c), d) and e) above.*
 
 Summary:
 
-* We started our experiment with 2 replica sets. We had one master (`270201`) and two slaves (`27021`, `27022`) in our first replica set (`rs0`).
+* We started our experiment with 2 replica sets. We had one master (`27020`) and two slaves (`27021`, `27022`) in our first replica set (`rs0`).
 * When we connected to our master server (in task `b`), it was able to read and write data. (Master server accepts all write request from clients, updates its data set and records update operations in its operation log.)
 * When we connected to our slave server (in task `c`), it was not able to read or write any data, because a slave server can receive operations from the primary oplog only and apply them on their data sets.
 * When we stopped our master server an "election" happened and we had a new master in our `rs0` replica set. (Please read my comments in question `d` and `c`.)
 * Because we had a new master server, we were able to read and write data, when we connected to this new master.
-* Our replica set is `Strictly Consistent` because after no master left, we were not able to read or write any data in that replica set. (More details in question `e`.)
+* Our replica set try to be `Strictly Consistent` because after no master left, we were not able to read or write any data in that replica set. In this case our data set still can be `Eventually Consistent`, but we have to setup it with `rs.slaveOk()`. (More details in question `e`.)
  
